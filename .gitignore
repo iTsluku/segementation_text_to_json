@@ -1,2 +1,2 @@
-/text
-output.json
+text/**
+output/**
