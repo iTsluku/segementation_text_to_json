@@ -2,6 +2,7 @@ import os
 import json
 import shutil
 from pathlib import Path
+from typing import List
 
 
 class Error(Exception):
@@ -14,9 +15,74 @@ class InvalidDocumentName(Error):
     pass
 
 
-def text_segmentation_alg(f: str) -> dict:
+def get_old_ids(file_path: str) -> List[str]:
+    old_ids = []
+
+    with open(file_path) as f:
+        for line in f:
+            if line not in ['\n', '\r\n', '']:
+                line = line.strip()
+                if line[0] == '(' and line[-1] == ')':
+                    line = line.replace('(', '').replace(')', '')
+                    if line.isdigit():
+                        old_ids.append(line)
+                else:
+                    break
+    return old_ids
+
+
+def get_new_ids(file_path: str) -> List[str]:
+    new_ids = []
+
+    with open(file_path) as f:
+        for line in f:
+            if line not in ['\n', '\r\n', '']:
+                line = line.strip()
+                if line[0] == '(' and line[-1] == ')':
+                    continue
+                elif line.isdigit():
+                    new_ids.append(line)
+                else:
+                    break
+    return new_ids
+
+
+def parse_process_paragraphs(file_path: str, n: int) -> List[List[str]]:
+    '''
+    Return empty list if document is invalid.
+    '''
+    process_paragraphs = []
+    passed_ids = False
+
+    with open(file_path) as f:
+        for line in f:
+            pass  # TODO
+    return process_paragraphs
+
+
+def text_segmentation_alg(file_path: str, file_name: str) -> dict:
+    '''
+    Store invalid documents.
+    Return empty dictionary if document is invalid.
+    '''
+    cwd = os.getcwd()
+    d = {}
+    old_ids = get_old_ids(file_path)
+    new_ids = get_new_ids(file_path)
+
+    if len(old_ids) != len(new_ids):
+        source = file_path
+        dest = os.path.join(cwd, "output/invalid_documents/"+file_name)
+        shutil.copyfile(source, dest)
+        return d
+
+    process_paragraphs = parse_process_paragraphs(file_path, len(old_ids))
+
+    for i in range(len(old_ids)):
+        d[f'{old_ids[i]} {new_ids[i]}'] = {}
+
+    '''
     d = {
-        "file_name": f,
         "Prozessnummer": "???",
         "Verfahrensnummer": "???",
         "Name": "???",
@@ -25,6 +91,8 @@ def text_segmentation_alg(f: str) -> dict:
         "Urteil": "???",
         "Anlagen": "???",
     }
+    '''
+
     return d
 
 
@@ -74,7 +142,9 @@ def exec():
             d[t] = {}
 
             for (id, f) in ids_and_filenames:
-                d[t][id] = text_segmentation_alg(f)
+                d[t][id] = text_segmentation_alg(os.path.join(path, f), f)
+                # break  # TODO rm debug help
+        # break  # TODO rm debug help
 
     with open(os.path.join(cwd, 'output/output.json'), 'w') as fp:
         json.dump(d, fp)
