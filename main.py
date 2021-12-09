@@ -92,7 +92,8 @@ def text_segmentation_alg(file_path: str, file_name: str) -> dict:
 
     except InvalidIdParagraph:
         source = file_path
-        dest = os.path.join(cwd, "output/invalid_documents/"+file_name)
+        dest = os.path.join(
+            cwd, "output/invalid_documents/id_paragraph/"+file_name)
         shutil.copyfile(source, dest)
         invalid_id_paragraph_n += 1
     '''
@@ -117,12 +118,20 @@ def exec():
     path_txt = os.path.join(cwd, "text")
     Path(os.path.join(cwd, "output")).mkdir(parents=True, exist_ok=True)
     path_invalid_docs = os.path.join(cwd, "output/invalid_documents")
+    path_invalid_document_name = os.path.join(
+        path_invalid_docs, "document_name")
+    path_invalid_id_paragraph = os.path.join(
+        path_invalid_docs, "id_paragraph")
     try:
         Path(path_invalid_docs).mkdir(parents=True, exist_ok=False)
     except FileExistsError:
         # rm /output/invalid_documents and create a new dir
         shutil.rmtree(path_invalid_docs, ignore_errors=True)
+        shutil.rmtree(path_invalid_document_name, ignore_errors=True)
+        shutil.rmtree(path_invalid_id_paragraph, ignore_errors=True)
         Path(path_invalid_docs).mkdir(parents=True, exist_ok=True)
+        Path(path_invalid_document_name).mkdir(parents=True, exist_ok=True)
+        Path(path_invalid_id_paragraph).mkdir(parents=True, exist_ok=True)
     process_types = []
 
     for path, dir, files in os.walk(path_txt):
@@ -151,7 +160,8 @@ def exec():
                         ids_and_filenames.append((int(id), file))
                 except InvalidDocumentName:
                     source = path+"/"+file
-                    dest = os.path.join(cwd, "output/invalid_documents/"+file)
+                    dest = os.path.join(
+                        cwd, "output/invalid_documents/document_name/"+file)
                     shutil.copyfile(source, dest)
                     invalid_document_name_n += 1
             ids_and_filenames.sort(key=lambda x: x[0])
