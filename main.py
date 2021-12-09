@@ -4,6 +4,9 @@ import shutil
 from pathlib import Path
 from typing import List
 
+invalid_document_name_n = 0
+invalid_id_paragraph_n = 0
+
 
 class Error(Exception):
     '''Base class for other exceptions'''
@@ -12,6 +15,11 @@ class Error(Exception):
 
 class InvalidDocumentName(Error):
     '''Raised when document name is not valid'''
+    pass
+
+
+class InvalidIdParagraph(Error):
+    '''Raised when document id paragraph is not valid'''
     pass
 
 
@@ -56,31 +64,37 @@ def parse_process_paragraphs(file_path: str, n: int) -> List[List[str]]:
 
     with open(file_path) as f:
         for line in f:
+            if not passed_ids:
+                pass
             pass  # TODO
     return process_paragraphs
 
 
 def text_segmentation_alg(file_path: str, file_name: str) -> dict:
+    global invalid_id_paragraph_n
     '''
     Store invalid documents.
     Return empty dictionary if document is invalid.
     '''
-    cwd = os.getcwd()
-    d = {}
-    old_ids = get_old_ids(file_path)
-    new_ids = get_new_ids(file_path)
+    try:
+        cwd = os.getcwd()
+        d = {}
+        old_ids = get_old_ids(file_path)
+        new_ids = get_new_ids(file_path)
 
-    if len(old_ids) != len(new_ids):
+        if len(old_ids) != len(new_ids):
+            raise InvalidIdParagraph
+
+        process_paragraphs = parse_process_paragraphs(file_path, len(old_ids))
+
+        for i in range(len(old_ids)):
+            d[f'{old_ids[i]} {new_ids[i]}'] = {}
+
+    except InvalidIdParagraph:
         source = file_path
         dest = os.path.join(cwd, "output/invalid_documents/"+file_name)
         shutil.copyfile(source, dest)
-        return d
-
-    process_paragraphs = parse_process_paragraphs(file_path, len(old_ids))
-
-    for i in range(len(old_ids)):
-        d[f'{old_ids[i]} {new_ids[i]}'] = {}
-
+        invalid_id_paragraph_n += 1
     '''
     d = {
         "Prozessnummer": "???",
@@ -92,12 +106,13 @@ def text_segmentation_alg(file_path: str, file_name: str) -> dict:
         "Anlagen": "???",
     }
     '''
-
     return d
 
 
 def exec():
+    global invalid_document_name_n, invalid_id_paragraph_n
     d = {}
+    d["Info_Ungültige_Dokumente"] = {}
     cwd = os.getcwd()
     path_txt = os.path.join(cwd, "text")
     Path(os.path.join(cwd, "output")).mkdir(parents=True, exist_ok=True)
@@ -138,6 +153,7 @@ def exec():
                     source = path+"/"+file
                     dest = os.path.join(cwd, "output/invalid_documents/"+file)
                     shutil.copyfile(source, dest)
+                    invalid_document_name_n += 1
             ids_and_filenames.sort(key=lambda x: x[0])
             d[t] = {}
 
@@ -146,8 +162,12 @@ def exec():
                 # break  # TODO rm debug help
         # break  # TODO rm debug help
 
-    with open(os.path.join(cwd, 'output/output.json'), 'w') as fp:
-        json.dump(d, fp)
+    # Add invalid documents info
+    d["Info_Ungültige_Dokumente"]["Dokument_Name"] = invalid_document_name_n
+    d["Info_Ungültige_Dokumente"]["Id_Absatz"] = invalid_id_paragraph_n
+
+    with open(os.path.join(cwd, 'output/output.json'), mode='w', encoding="utf-8") as fp:
+        json.dump(d, fp, ensure_ascii=False)
 
 
 if __name__ == "__main__":
