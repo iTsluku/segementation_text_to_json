@@ -84,10 +84,10 @@ def get_old_ids(file_path: str) -> List[str]:
     with open(file_path) as f:
         for line in f:
             if line not in ["\n", "\r\n", ""]:
-                line = line.strip()
+                line = line.strip().replace(".", "")
                 if line[0] == "(" and line[-1] == ")":
                     line = line.replace("(", "").replace(")", "")
-                    if line.isdigit():
+                    if line.isdigit() and len(line) >= 3:
                         old_ids.append(line)
                 else:
                     break
@@ -100,14 +100,31 @@ def get_new_ids(file_path: str) -> List[str]:
     with open(file_path) as f:
         for line in f:
             if line not in ["\n", "\r\n", ""]:
-                line = line.strip()
+                line = line.strip().replace(".", "")
                 if line[0] == "(" and line[-1] == ")":
                     continue
-                elif line.isdigit():
+                elif line.isdigit() and len(line) >= 4:
                     new_ids.append(line)
                 else:
                     break
     return new_ids
+
+
+def remove_linebreak_hyphen(s: str) -> str:
+    o = ""
+    prev = ""
+
+    for c in s:
+        if c == "\n" and prev == "-":
+            prev = ""
+        elif c == "\n":
+            o += prev
+            prev = ""
+        else:
+            o += prev
+            prev = c
+    o += prev
+    return o
 
 
 def parse_process_paragraphs(file_path: str, n: int) -> List[List[str]]:
@@ -116,6 +133,7 @@ def parse_process_paragraphs(file_path: str, n: int) -> List[List[str]]:
     """
     process_paragraphs = []
     passed_ids = False
+    passed_potential_overlap = False
     p = ""
     temp = ""
 
@@ -135,21 +153,29 @@ def parse_process_paragraphs(file_path: str, n: int) -> List[List[str]]:
                 if len(line.split()) >= 2:
                     check = line.split()[:2]
                     if (
-                        check[0] in ["Prozeß", "Ermittlungsverfahren"]
-                        and check[1] == "gegen"
+                        check[0].replace(".", "")
+                        in ["Prozeß", "Frozeß", "Ermittlungsverfahren"]
+                        and check[1].replace(".", "") == "gegen"
                     ):
                         new_paragraph = True
+                        passed_potential_overlap = True
                 if new_paragraph and not temp == "":
-                    process_paragraphs.append(temp)
-                    temp = ""
-                    p = line
+                    if passed_potential_overlap:
+                        process_paragraphs.append(temp)
+                        temp = ""
+                        p = line
                 else:
                     p += temp + line
                     temp = ""
+    # TODO check potential non finished process paragraph/ overlap --accumulate all lines of a type?
     if p != "":
         process_paragraphs.append(p)
     elif temp != "":
         process_paragraphs.append(temp)
+
+    for i, s in enumerate(process_paragraphs):
+        process_paragraphs[i] = remove_linebreak_hyphen(s)
+
     return process_paragraphs
 
 
