@@ -5,8 +5,10 @@ from pathlib import Path
 from typing import List
 
 parsed_documents_n = 0
+parsed_process_segements_n = 0
 invalid_document_name_n = 0
 invalid_id_paragraph_n = 0
+invalid_paragraph_segmentation_n = 0
 valid_document_n = 0
 
 
@@ -24,6 +26,12 @@ class InvalidDocumentName(Error):
 
 class InvalidIdParagraph(Error):
     """Raised when document id paragraph is not valid."""
+
+    pass
+
+
+class ParagraphSegmentationException(Error):
+    """Raised when paragraphs can't be segmented."""
 
     pass
 
@@ -108,37 +116,73 @@ def parse_process_paragraphs(file_path: str, n: int) -> List[List[str]]:
     """
     process_paragraphs = []
     passed_ids = False
+    p = ""
+    temp = ""
 
     with open(file_path) as f:
         for line in f:
             if not passed_ids:
-                pass
-            pass  # TODO
+                if line[0] == "(" or line[0].isdigit() or line in ["\n", "\r\n"]:
+                    continue
+                else:
+                    passed_ids = True
+            # passed_ids
+            if line in ["\n", "\r\n"]:
+                temp = p
+                p = ""
+            else:
+                new_paragraph = False
+                if len(line.split()) >= 2:
+                    check = line.split()[:2]
+                    if (
+                        check[0] in ["Prozeß", "Ermittlungsverfahren"]
+                        and check[1] == "gegen"
+                    ):
+                        new_paragraph = True
+                if new_paragraph and not temp == "":
+                    process_paragraphs.append(temp)
+                    temp = ""
+                    p = line
+                else:
+                    p += temp + line
+                    temp = ""
+    if p != "":
+        process_paragraphs.append(p)
+    elif temp != "":
+        process_paragraphs.append(temp)
     return process_paragraphs
 
 
 def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]:
-    global invalid_id_paragraph_n, valid_document_n
+    global invalid_id_paragraph_n, valid_document_n, invalid_paragraph_segmentation_n, parsed_process_segements_n
     """
     Return list with processes, empty list if document is invalid.
     Store invalid documents.
     """
+
+    # process 310 :: multiple sentenced people
     try:
         cwd = os.getcwd()
         l = []
         old_ids = get_old_ids(file_path)
         new_ids = get_new_ids(file_path)
 
-        if len(old_ids) != len(new_ids):
+        if len(old_ids) == 0 or len(new_ids) == 0 or len(old_ids) != len(new_ids):
             raise InvalidIdParagraph
 
         process_paragraphs = parse_process_paragraphs(file_path, len(old_ids))
+
+        if len(process_paragraphs) != len(old_ids):
+            raise ParagraphSegmentationException
+
+        parsed_process_segements_n += len(process_paragraphs)
 
         for i in range(len(old_ids)):
             d = {}
             d["Id_Archiv_Alt"] = old_ids[i]
             d["Id_Archiv_Neu"] = new_ids[i]
             d["Id_Seite"] = id
+            d["Text"] = process_paragraphs[i]
             d["Prozessnummer"] = "TODO"
             d["Personen_Name"] = "TODO"
             d["Beruf"] = "TODO"
@@ -155,11 +199,18 @@ def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]
         dest = os.path.join(cwd, "output/invalid_documents/id_paragraph/" + file_name)
         shutil.copyfile(source, dest)
         invalid_id_paragraph_n += 1
+    except ParagraphSegmentationException:
+        source = file_path
+        dest = os.path.join(
+            cwd, "output/invalid_documents/paragraph_segmentation/" + file_name
+        )
+        shutil.copyfile(source, dest)
+        invalid_paragraph_segmentation_n += 1
     return l
 
 
 def exec():
-    global parsed_documents_n, invalid_document_name_n, invalid_id_paragraph_n, valid_document_n
+    global parsed_documents_n, invalid_document_name_n, invalid_id_paragraph_n, valid_document_n, invalid_paragraph_segmentation_n
     d = {}
     d["Statistiken"] = {}
     d["Statistiken"]["Allgemein"] = {}
@@ -172,6 +223,10 @@ def exec():
     path_invalid_docs = os.path.join(cwd, "output/invalid_documents")
     path_invalid_document_name = os.path.join(path_invalid_docs, "document_name")
     path_invalid_id_paragraph = os.path.join(path_invalid_docs, "id_paragraph")
+    path_invalid_paragraph_segmentation = os.path.join(
+        path_invalid_docs, "paragraph_segmentation"
+    )
+
     try:
         Path(path_invalid_docs).mkdir(parents=True, exist_ok=False)
     except FileExistsError:
@@ -179,9 +234,11 @@ def exec():
         shutil.rmtree(path_invalid_docs, ignore_errors=True)
         shutil.rmtree(path_invalid_document_name, ignore_errors=True)
         shutil.rmtree(path_invalid_id_paragraph, ignore_errors=True)
+        shutil.rmtree(path_invalid_paragraph_segmentation, ignore_errors=True)
         Path(path_invalid_docs).mkdir(parents=True, exist_ok=True)
         Path(path_invalid_document_name).mkdir(parents=True, exist_ok=True)
         Path(path_invalid_id_paragraph).mkdir(parents=True, exist_ok=True)
+        Path(path_invalid_paragraph_segmentation).mkdir(parents=True, exist_ok=True)
     process_types = []
 
     for path, dir, files in os.walk(path_txt):
@@ -225,12 +282,15 @@ def exec():
                 for p_d in p_d_list:
                     d["Dokumente"][t].append(p_d)
                 # break  # TODO rm debug help
+            # break  # TODO rm debug help
         # break  # TODO rm debug help
 
     # Add stats
     d["Statistiken"]["Allgemein"]["Gültige_Dokumente_Gesamt"] = valid_document_n
     d["Statistiken"]["Allgemein"]["Ungültige_Dokumente_Gesamt"] = (
-        invalid_document_name_n + invalid_id_paragraph_n
+        invalid_document_name_n
+        + invalid_id_paragraph_n
+        + invalid_paragraph_segmentation_n
     )
     d["Statistiken"]["Allgemein"]["Anzahl_Dokumente_Gesamt"] = (
         d["Statistiken"]["Allgemein"]["Gültige_Dokumente_Gesamt"]
@@ -244,6 +304,7 @@ def exec():
         / d["Statistiken"]["Allgemein"]["Anzahl_Dokumente_Gesamt"],
         4,
     )
+    d["Statistiken"]["Allgemein"]["Segmentierte_Prozesse"] = parsed_process_segements_n
     d["Statistiken"]["Allgemein"][
         "Ungültige_Prozesse_Gesamt"
     ] = "TODO: Identifiziere Anzahl an Prozessabsätzen in ungültigen Dokumenten"
@@ -255,6 +316,9 @@ def exec():
         "Dokument_Name"
     ] = invalid_document_name_n
     d["Statistiken"]["Info_Ungültige_Dokumente"]["Id_Absatz"] = invalid_id_paragraph_n
+    d["Statistiken"]["Info_Ungültige_Dokumente"][
+        "Process_Segmentierung"
+    ] = invalid_paragraph_segmentation_n
     d["Statistiken"]["Info_Ungültige_Dokumente"]["Prozessnummer"] = "TODO"
     d["Statistiken"]["Info_Ungültige_Dokumente"]["Verfahrensnummer"] = "TODO"
     d["Statistiken"]["Info_Ungültige_Dokumente"]["Personen_Name"] = "TODO"
