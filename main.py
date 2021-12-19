@@ -11,52 +11,62 @@ valid_document_n = 0
 
 
 class Error(Exception):
-    '''Base class for other exceptions.'''
+    """Base class for other exceptions."""
+
     pass
 
 
 class InvalidDocumentName(Error):
-    '''Raised when document name is not valid.'''
+    """Raised when document name is not valid."""
+
     pass
 
 
 class InvalidIdParagraph(Error):
-    '''Raised when document id paragraph is not valid.'''
+    """Raised when document id paragraph is not valid."""
+
     pass
 
 
 class ProcessNumberException(Error):
-    '''Raised when process number can't be parsed, related to process documents.'''
+    """Raised when process number can't be parsed, related to process documents."""
+
     pass
 
 
 class ProcedureNumberException(Error):
-    '''Raised when procedure number can't be parsed, related to proceedings discontinued by the courts.'''
+    """Raised when procedure number can't be parsed, related to proceedings discontinued by the courts."""
+
     pass
 
 
 class PeopleNameException(Error):
-    '''Raised when names of persons can't be parsed.'''
+    """Raised when names of persons can't be parsed."""
+
     pass
 
 
 class OccupationException(Error):
-    '''Raised when occupation can't be parsed.'''
+    """Raised when occupation can't be parsed."""
+
     pass
 
 
 class BirthdateException(Error):
-    '''Raised when birthdate can't be parsed.'''
+    """Raised when birthdate can't be parsed."""
+
     pass
 
 
 class JudgmentException(Error):
-    '''Raised when judgment can't be parsed.'''
+    """Raised when judgment can't be parsed."""
+
     pass
 
 
 class AttachmentsException(Error):
-    '''Raised when attachments can't be parsed.'''
+    """Raised when attachments can't be parsed."""
+
     pass
 
 
@@ -65,10 +75,10 @@ def get_old_ids(file_path: str) -> List[str]:
 
     with open(file_path) as f:
         for line in f:
-            if line not in ['\n', '\r\n', '']:
+            if line not in ["\n", "\r\n", ""]:
                 line = line.strip()
-                if line[0] == '(' and line[-1] == ')':
-                    line = line.replace('(', '').replace(')', '')
+                if line[0] == "(" and line[-1] == ")":
+                    line = line.replace("(", "").replace(")", "")
                     if line.isdigit():
                         old_ids.append(line)
                 else:
@@ -81,9 +91,9 @@ def get_new_ids(file_path: str) -> List[str]:
 
     with open(file_path) as f:
         for line in f:
-            if line not in ['\n', '\r\n', '']:
+            if line not in ["\n", "\r\n", ""]:
                 line = line.strip()
-                if line[0] == '(' and line[-1] == ')':
+                if line[0] == "(" and line[-1] == ")":
                     continue
                 elif line.isdigit():
                     new_ids.append(line)
@@ -93,9 +103,9 @@ def get_new_ids(file_path: str) -> List[str]:
 
 
 def parse_process_paragraphs(file_path: str, n: int) -> List[List[str]]:
-    '''
+    """
     Return empty list if document is invalid.
-    '''
+    """
     process_paragraphs = []
     passed_ids = False
 
@@ -107,15 +117,15 @@ def parse_process_paragraphs(file_path: str, n: int) -> List[List[str]]:
     return process_paragraphs
 
 
-def text_segmentation_alg(file_path: str, file_name: str) -> dict:
+def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]:
     global invalid_id_paragraph_n, valid_document_n
-    '''
+    """
+    Return list with processes, empty list if document is invalid.
     Store invalid documents.
-    Return empty dictionary if document is invalid.
-    '''
+    """
     try:
         cwd = os.getcwd()
-        d = {}
+        l = []
         old_ids = get_old_ids(file_path)
         new_ids = get_new_ids(file_path)
 
@@ -125,18 +135,27 @@ def text_segmentation_alg(file_path: str, file_name: str) -> dict:
         process_paragraphs = parse_process_paragraphs(file_path, len(old_ids))
 
         for i in range(len(old_ids)):
-            d[f'{old_ids[i]} {new_ids[i]}'] = {}
+            d = {}
+            d["Id_Archiv_Alt"] = old_ids[i]
+            d["Id_Archiv_Neu"] = new_ids[i]
+            d["Id_Seite"] = id
+            d["Prozessnummer"] = "TODO"
+            d["Personen_Name"] = "TODO"
+            d["Beruf"] = "TODO"
+            d["Geburtsdatum"] = "TODO"
+            d["Urteil"] = "TODO"
+            d["Anlagen"] = "TODO"
+            l.append(d)
 
         # end of "parser" -> no expection raised
         valid_document_n += 1
 
     except InvalidIdParagraph:
         source = file_path
-        dest = os.path.join(
-            cwd, "output/invalid_documents/id_paragraph/"+file_name)
+        dest = os.path.join(cwd, "output/invalid_documents/id_paragraph/" + file_name)
         shutil.copyfile(source, dest)
         invalid_id_paragraph_n += 1
-    return d
+    return l
 
 
 def exec():
@@ -151,10 +170,8 @@ def exec():
     path_txt = os.path.join(cwd, "text")
     Path(os.path.join(cwd, "output")).mkdir(parents=True, exist_ok=True)
     path_invalid_docs = os.path.join(cwd, "output/invalid_documents")
-    path_invalid_document_name = os.path.join(
-        path_invalid_docs, "document_name")
-    path_invalid_id_paragraph = os.path.join(
-        path_invalid_docs, "id_paragraph")
+    path_invalid_document_name = os.path.join(path_invalid_docs, "document_name")
+    path_invalid_id_paragraph = os.path.join(path_invalid_docs, "id_paragraph")
     try:
         Path(path_invalid_docs).mkdir(parents=True, exist_ok=False)
     except FileExistsError:
@@ -192,37 +209,51 @@ def exec():
 
                     ids_and_filenames.append((int(id), file))
                 except InvalidDocumentName:
-                    source = path+"/"+file
+                    source = path + "/" + file
                     dest = os.path.join(
-                        cwd, "output/invalid_documents/document_name/"+file)
+                        cwd, "output/invalid_documents/document_name/" + file
+                    )
                     shutil.copyfile(source, dest)
                     invalid_document_name_n += 1
                 finally:
                     parsed_documents_n += 1
             ids_and_filenames.sort(key=lambda x: x[0])
-            d["Dokumente"][t] = {}
+            d["Dokumente"][t] = []
 
             for (id, f) in ids_and_filenames:
-                d["Dokumente"][t][id] = text_segmentation_alg(
-                    os.path.join(path, f), f)
+                p_d_list = text_segmentation_alg(os.path.join(path, f), f, id)
+                for p_d in p_d_list:
+                    d["Dokumente"][t].append(p_d)
                 # break  # TODO rm debug help
         # break  # TODO rm debug help
 
     # Add stats
     d["Statistiken"]["Allgemein"]["Gültige_Dokumente_Gesamt"] = valid_document_n
-    d["Statistiken"]["Allgemein"]["Ungültige_Dokumente_Gesamt"] = invalid_document_name_n + \
-        invalid_id_paragraph_n
-    d["Statistiken"]["Allgemein"]["Anzahl_Dokumente_Gesamt"] = d["Statistiken"]["Allgemein"]["Gültige_Dokumente_Gesamt"] + \
-        d["Statistiken"]["Allgemein"]["Ungültige_Dokumente_Gesamt"]
-    d["Statistiken"]["Allgemein"]["Anzahl_Verarbeitete_Dokumente_Prüfsumme"] = parsed_documents_n
+    d["Statistiken"]["Allgemein"]["Ungültige_Dokumente_Gesamt"] = (
+        invalid_document_name_n + invalid_id_paragraph_n
+    )
+    d["Statistiken"]["Allgemein"]["Anzahl_Dokumente_Gesamt"] = (
+        d["Statistiken"]["Allgemein"]["Gültige_Dokumente_Gesamt"]
+        + d["Statistiken"]["Allgemein"]["Ungültige_Dokumente_Gesamt"]
+    )
+    d["Statistiken"]["Allgemein"][
+        "Anzahl_Verarbeitete_Dokumente_Prüfsumme"
+    ] = parsed_documents_n
     d["Statistiken"]["Allgemein"]["Anteil_Gültige_Dokumente"] = round(
-        d["Statistiken"]["Allgemein"]["Gültige_Dokumente_Gesamt"] / d["Statistiken"]["Allgemein"]["Anzahl_Dokumente_Gesamt"], 4)
-    d["Statistiken"]["Allgemein"]["Ungültige_Prozesse_Gesamt"] = "TODO: Identifiziere Anzahl an Prozessabsätzen in ungültigen Dokumenten"
+        d["Statistiken"]["Allgemein"]["Gültige_Dokumente_Gesamt"]
+        / d["Statistiken"]["Allgemein"]["Anzahl_Dokumente_Gesamt"],
+        4,
+    )
+    d["Statistiken"]["Allgemein"][
+        "Ungültige_Prozesse_Gesamt"
+    ] = "TODO: Identifiziere Anzahl an Prozessabsätzen in ungültigen Dokumenten"
     d["Statistiken"]["Allgemein"]["Gültige_Prozesse_Gesamt"] = "TODO"
     d["Statistiken"]["Allgemein"]["Anteil_Gültige_Prozesse"] = "TODO"
 
     # Add "invalid documents info"
-    d["Statistiken"]["Info_Ungültige_Dokumente"]["Dokument_Name"] = invalid_document_name_n
+    d["Statistiken"]["Info_Ungültige_Dokumente"][
+        "Dokument_Name"
+    ] = invalid_document_name_n
     d["Statistiken"]["Info_Ungültige_Dokumente"]["Id_Absatz"] = invalid_id_paragraph_n
     d["Statistiken"]["Info_Ungültige_Dokumente"]["Prozessnummer"] = "TODO"
     d["Statistiken"]["Info_Ungültige_Dokumente"]["Verfahrensnummer"] = "TODO"
@@ -232,7 +263,9 @@ def exec():
     d["Statistiken"]["Info_Ungültige_Dokumente"]["Urteil"] = "TODO"
     d["Statistiken"]["Info_Ungültige_Dokumente"]["Anlagen"] = "TODO"
 
-    with open(os.path.join(cwd, 'output/output.json'), mode='w', encoding="utf-8") as fp:
+    with open(
+        os.path.join(cwd, "output/output.json"), mode="w", encoding="utf-8"
+    ) as fp:
         json.dump(d, fp, ensure_ascii=False)
 
 
