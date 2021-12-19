@@ -278,7 +278,7 @@ def exec():
             d["Dokumente"][t] = []
 
             for (id, f) in ids_and_filenames:
-                p_d_list = text_segmentation_alg(os.path.join(path, f), f, id)
+                p_d_list = text_segmentation_alg(os.path.join(path, f), f, str(id))
                 for p_d in p_d_list:
                     d["Dokumente"][t].append(p_d)
                 # break  # TODO rm debug help
