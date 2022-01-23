@@ -1,2 +1,4 @@
 text/**
 output/**
+.idea/
+test_pattern.py
