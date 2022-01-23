@@ -1,14 +1,19 @@
 import os
 import json
 import shutil
+from ocr.PreprocessOcrOutput import fix_first_last_name_no_whitespace
 from pathlib import Path
 from typing import List
 
+cwd = os.getcwd()
 parsed_documents_n = 0
 parsed_process_segements_n = 0
 invalid_document_name_n = 0
 invalid_id_paragraph_n = 0
 invalid_paragraph_segmentation_n = 0
+invalid_occupation_n = 0
+invalid_birthdate_n = 0
+invalid_person_name = 0
 valid_document_n = 0
 
 
@@ -48,7 +53,7 @@ class ProcedureNumberException(Error):
     pass
 
 
-class PeopleNameException(Error):
+class PersonNameException(Error):
     """Raised when names of persons can't be parsed."""
 
     pass
@@ -127,7 +132,7 @@ def remove_linebreak_hyphen(s: str) -> str:
     return o
 
 
-def parse_process_paragraphs(file_path: str, n: int) -> List[List[str]]:
+def parse_process_paragraphs(file_path: str, old_ids_n: int) -> List[str]:
     """
     Return empty list if document is invalid.
     """
@@ -179,8 +184,19 @@ def parse_process_paragraphs(file_path: str, n: int) -> List[List[str]]:
     return process_paragraphs
 
 
+def preprocess_paragraphs(paragraphs: List[str]) -> List[str]:
+    preprocessed_paragraphs = []
+    for paragraph in paragraphs:
+        preprocessed_paragraph = paragraph
+        preprocessed_paragraph = fix_first_last_name_no_whitespace(
+            preprocessed_paragraph
+        )
+        preprocessed_paragraphs.append(preprocessed_paragraph)
+    return preprocessed_paragraphs
+
+
 def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]:
-    global invalid_id_paragraph_n, valid_document_n, invalid_paragraph_segmentation_n, parsed_process_segements_n
+    global cwd, invalid_id_paragraph_n, valid_document_n, invalid_paragraph_segmentation_n, parsed_process_segements_n, invalid_occupation_n, invalid_birthdate_n, invalid_person_name
     """
     Return list with processes, empty list if document is invalid.
     Store invalid documents.
@@ -188,7 +204,6 @@ def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]
 
     # process 310 :: multiple sentenced people
     try:
-        cwd = os.getcwd()
         l = []
         old_ids = get_old_ids(file_path)
         new_ids = get_new_ids(file_path)
@@ -197,6 +212,7 @@ def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]
             raise InvalidIdParagraph
 
         process_paragraphs = parse_process_paragraphs(file_path, len(old_ids))
+        process_paragraphs = preprocess_paragraphs(process_paragraphs)
 
         if len(process_paragraphs) != len(old_ids):
             raise ParagraphSegmentationException
@@ -209,10 +225,12 @@ def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]
             d["Id_Archiv_Neu"] = new_ids[i]
             d["Id_Seite"] = id
             d["Text"] = process_paragraphs[i]
+            d["Personen"] = {}
+            d["Personen"]["Vorname"] = "TODO"
+            d["Personen"]["Nachname"] = "TODO"
+            d["Personen"]["Geburtsdatum"] = "TODO"
+            d["Personen"]["Beruf"] = "TODO"
             d["Prozessnummer"] = "TODO"
-            d["Personen_Name"] = "TODO"
-            d["Beruf"] = "TODO"
-            d["Geburtsdatum"] = "TODO"
             d["Urteil"] = "TODO"
             d["Anlagen"] = "TODO"
             l.append(d)
@@ -232,11 +250,26 @@ def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]
         )
         shutil.copyfile(source, dest)
         invalid_paragraph_segmentation_n += 1
+    except OccupationException:
+        source = file_path
+        dest = os.path.join(cwd, "output/invalid_documents/occupation/" + file_name)
+        shutil.copyfile(source, dest)
+        invalid_occupation_n += 1
+    except PersonNameException:
+        source = file_path
+        dest = os.path.join(cwd, "output/invalid_documents/person_name/" + file_name)
+        shutil.copyfile(source, dest)
+        invalid_person_name += 1
+    except BirthdateException:
+        source = file_path
+        dest = os.path.join(cwd, "output/invalid_documents/birthdate/" + file_name)
+        shutil.copyfile(source, dest)
+        invalid_birthdate_n += 1
     return l
 
 
 def exec():
-    global parsed_documents_n, invalid_document_name_n, invalid_id_paragraph_n, valid_document_n, invalid_paragraph_segmentation_n
+    global parsed_documents_n, invalid_document_name_n, invalid_id_paragraph_n, valid_document_n, invalid_occupation_n, invalid_paragraph_segmentation_n, invalid_birthdate_n, invalid_person_name
     d = {}
     d["Statistiken"] = {}
     d["Statistiken"]["Allgemein"] = {}
@@ -252,6 +285,9 @@ def exec():
     path_invalid_paragraph_segmentation = os.path.join(
         path_invalid_docs, "paragraph_segmentation"
     )
+    path_invalid_occupation = os.path.join(path_invalid_docs, "occupation")
+    path_invalid_person_name = os.path.join(path_invalid_docs, "person_name")
+    path_invalid_birthday = os.path.join(path_invalid_docs, "birthday")
 
     try:
         Path(path_invalid_docs).mkdir(parents=True, exist_ok=False)
@@ -261,10 +297,16 @@ def exec():
         shutil.rmtree(path_invalid_document_name, ignore_errors=True)
         shutil.rmtree(path_invalid_id_paragraph, ignore_errors=True)
         shutil.rmtree(path_invalid_paragraph_segmentation, ignore_errors=True)
+        shutil.rmtree(path_invalid_occupation, ignore_errors=True)
+        shutil.rmtree(path_invalid_person_name, ignore_errors=True)
+        shutil.rmtree(path_invalid_birthday, ignore_errors=True)
         Path(path_invalid_docs).mkdir(parents=True, exist_ok=True)
         Path(path_invalid_document_name).mkdir(parents=True, exist_ok=True)
         Path(path_invalid_id_paragraph).mkdir(parents=True, exist_ok=True)
         Path(path_invalid_paragraph_segmentation).mkdir(parents=True, exist_ok=True)
+        Path(path_invalid_occupation).mkdir(parents=True, exist_ok=True)
+        Path(path_invalid_person_name).mkdir(parents=True, exist_ok=True)
+        Path(path_invalid_birthday).mkdir(parents=True, exist_ok=True)
     process_types = []
 
     for path, dir, files in os.walk(path_txt):
@@ -317,6 +359,9 @@ def exec():
         invalid_document_name_n
         + invalid_id_paragraph_n
         + invalid_paragraph_segmentation_n
+        + invalid_occupation_n
+        + invalid_birthdate_n
+        + invalid_person_name
     )
     d["Statistiken"]["Allgemein"]["Anzahl_Dokumente_Gesamt"] = (
         d["Statistiken"]["Allgemein"]["Gültige_Dokumente_Gesamt"]
@@ -345,11 +390,11 @@ def exec():
     d["Statistiken"]["Info_Ungültige_Dokumente"][
         "Process_Segmentierung"
     ] = invalid_paragraph_segmentation_n
+    d["Statistiken"]["Info_Ungültige_Dokumente"]["Beruf"] = invalid_occupation_n
+    d["Statistiken"]["Info_Ungültige_Dokumente"]["Personen_Name"] = invalid_person_name
+    d["Statistiken"]["Info_Ungültige_Dokumente"]["Geburtsdatum"] = invalid_birthdate_n
     d["Statistiken"]["Info_Ungültige_Dokumente"]["Prozessnummer"] = "TODO"
     d["Statistiken"]["Info_Ungültige_Dokumente"]["Verfahrensnummer"] = "TODO"
-    d["Statistiken"]["Info_Ungültige_Dokumente"]["Personen_Name"] = "TODO"
-    d["Statistiken"]["Info_Ungültige_Dokumente"]["Beruf"] = "TODO"
-    d["Statistiken"]["Info_Ungültige_Dokumente"]["Geburtsdatum"] = "TODO"
     d["Statistiken"]["Info_Ungültige_Dokumente"]["Urteil"] = "TODO"
     d["Statistiken"]["Info_Ungültige_Dokumente"]["Anlagen"] = "TODO"
 
