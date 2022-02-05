@@ -18,11 +18,10 @@ def fix_first_last_name_no_whitespace(text: str) -> str:
     pattern_first_second_name_no_whitespace_together = re.compile(
         r"([A-ZÄÖU][a-zäöü]+[A-ZÄÖÜ]+)"
     )
-    name_groupings = re.findall(pattern_first_second_name_no_whitespace, text)
+    name_groupings = pattern_first_second_name_no_whitespace.findall(text)
     replacements = [f"{x} {y}" for (x, y) in name_groupings]
     output = text
-    output = re.sub(
-        pattern_first_second_name_no_whitespace_together,
+    output = pattern_first_second_name_no_whitespace_together.sub(
         GroupingIndex(replacements),
         output,
     )

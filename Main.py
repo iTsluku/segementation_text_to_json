@@ -1,11 +1,18 @@
 import os
 import json
 import shutil
+
+from ocr.ParseProcessSegements import (
+    get_number_of_persons_involved_in_process,
+    get_first_name_of_persons_involved_in_process,
+    get_last_name_of_persons_involved_in_process,
+)
 from ocr.PreprocessOcrOutput import fix_first_last_name_no_whitespace
 from pathlib import Path
 from typing import List
 
 cwd = os.getcwd()
+
 parsed_documents_n = 0
 parsed_process_segements_n = 0
 invalid_document_name_n = 0
@@ -195,16 +202,39 @@ def preprocess_paragraphs(paragraphs: List[str]) -> List[str]:
     return preprocessed_paragraphs
 
 
+def parse_segments(process_paragraphs: List[str]) -> List[dict]:
+    paragraphs_as_dict = []
+
+    for p in process_paragraphs:
+        d = {}
+        number_of_persons = get_number_of_persons_involved_in_process(p)
+        first_names = get_first_name_of_persons_involved_in_process(p)
+        last_names = get_last_name_of_persons_involved_in_process(p)
+
+        if number_of_persons != len(first_names) and number_of_persons != (last_names):
+            raise PersonNameException
+
+        d["Personen"] = [None] * number_of_persons
+
+        for i in range(number_of_persons):
+            d["Personen"][i] = {}
+            d["Personen"][i]["Vorname"] = first_names[i]
+            d["Personen"][i]["Nachname"] = last_names[i]
+
+        paragraphs_as_dict.append(d)
+
+    return paragraphs_as_dict
+
+
 def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]:
     global cwd, invalid_id_paragraph_n, valid_document_n, invalid_paragraph_segmentation_n, parsed_process_segements_n, invalid_occupation_n, invalid_birthdate_n, invalid_person_name
     """
     Return list with processes, empty list if document is invalid.
     Store invalid documents.
     """
-
+    l = []
     # process 310 :: multiple sentenced people
     try:
-        l = []
         old_ids = get_old_ids(file_path)
         new_ids = get_new_ids(file_path)
 
@@ -219,20 +249,24 @@ def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]
 
         parsed_process_segements_n += len(process_paragraphs)
 
-        for i in range(len(old_ids)):
-            d = {}
+        # TODO apply
+        paragraphs_as_dict = parse_segments(process_paragraphs)
+
+        for i, d in enumerate(paragraphs_as_dict):
             d["Id_Archiv_Alt"] = old_ids[i]
             d["Id_Archiv_Neu"] = new_ids[i]
             d["Id_Seite"] = id
             d["Text"] = process_paragraphs[i]
-            d["Personen"] = {}
-            d["Personen"]["Vorname"] = "TODO"
-            d["Personen"]["Nachname"] = "TODO"
-            d["Personen"]["Geburtsdatum"] = "TODO"
-            d["Personen"]["Beruf"] = "TODO"
+
+            # TODO
             d["Prozessnummer"] = "TODO"
-            d["Urteil"] = "TODO"
-            d["Anlagen"] = "TODO"
+
+            for person_d in d["Personen"]:
+                person_d["Geburtsdatum"] = "TODO"
+                person_d["Beruf"] = "TODO"
+                person_d["Urteil"] = "TODO"
+                person_d["Anlagen"] = "TODO"
+
             l.append(d)
 
         # end of "parser" -> no expection raised
@@ -268,7 +302,7 @@ def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]
     return l
 
 
-def exec():
+def exec_app():
     global parsed_documents_n, invalid_document_name_n, invalid_id_paragraph_n, valid_document_n, invalid_occupation_n, invalid_paragraph_segmentation_n, invalid_birthdate_n, invalid_person_name
     d = {}
     d["Statistiken"] = {}
@@ -405,4 +439,4 @@ def exec():
 
 
 if __name__ == "__main__":
-    exec()
+    exec_app()
