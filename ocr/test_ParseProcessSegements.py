@@ -114,7 +114,42 @@ class TestParseProcessSegments(unittest.TestCase):
                 process_text
             )
         )
-        print(last_name_persons_output)
         self.assertEqual(
             expected_last_name_of_persons_involved_in_process, last_name_persons_output
         )
+
+    def test_get_last_name_of_persons_involved_in_process_look_ahead(self):
+        process_text = "... Test NSDAP-Blabla ..."
+        wrong_output = ["NSDAP"]
+        last_name_person_output = (
+            ParseProcessSegements.get_last_name_of_persons_involved_in_process(
+                process_text
+            )
+        )
+        self.assertNotEqual(wrong_output, last_name_person_output)
+
+    def test_get_multiple_first_name_of_persons_involved_in_process(self):
+        process_text = (
+            "Prozeß gegen den Bäcker Peter Markus PREISSL (geb.28. Jun. 1911) "
+            "aus Himmelmoos Gde. Niederaudorf (Lkr. Rosenheim)..."
+        )
+        expected_output = ["Peter Markus"]
+        full_first_name_person_output = (
+            ParseProcessSegements.get_first_name_of_persons_involved_in_process(
+                process_text
+            )
+        )
+        self.assertEqual(expected_output, full_first_name_person_output)
+
+    def test_prefix_variation_before_occupation(self):
+        process_text = (
+            "Prozeß gegen die Bäckermeisterin Anna Maria PREISSL (geb.28. Jun. 1911) "
+            "aus Himmelmoos Gde. Niederaudorf (Lkr. Rosenheim)..."
+        )
+        expected_output = ["Bäckermeisterin"]
+        full_first_name_person_output = (
+            ParseProcessSegements.get_occupation_of_persons_involved_in_process(
+                process_text
+            )
+        )
+        self.assertEqual(expected_output, full_first_name_person_output)

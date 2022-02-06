@@ -6,6 +6,7 @@ from ocr.ParseProcessSegements import (
     get_number_of_persons_involved_in_process,
     get_first_name_of_persons_involved_in_process,
     get_last_name_of_persons_involved_in_process,
+    get_occupation_of_persons_involved_in_process,
 )
 from ocr.PreprocessOcrOutput import fix_first_last_name_no_whitespace
 from pathlib import Path
@@ -210,9 +211,14 @@ def parse_segments(process_paragraphs: List[str]) -> List[dict]:
         number_of_persons = get_number_of_persons_involved_in_process(p)
         first_names = get_first_name_of_persons_involved_in_process(p)
         last_names = get_last_name_of_persons_involved_in_process(p)
+        occupations = get_occupation_of_persons_involved_in_process(p)
 
+        # TODO don't kill whole paragraph stack if one fails
         if number_of_persons != len(first_names) and number_of_persons != (last_names):
             raise PersonNameException
+
+        if number_of_persons != len(occupations):
+            raise OccupationException
 
         d["Personen"] = [None] * number_of_persons
 
@@ -220,6 +226,7 @@ def parse_segments(process_paragraphs: List[str]) -> List[dict]:
             d["Personen"][i] = {}
             d["Personen"][i]["Vorname"] = first_names[i]
             d["Personen"][i]["Nachname"] = last_names[i]
+            d["Personen"][i]["Beruf"] = occupations[i]
 
         paragraphs_as_dict.append(d)
 
@@ -263,7 +270,6 @@ def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]
 
             for person_d in d["Personen"]:
                 person_d["Geburtsdatum"] = "TODO"
-                person_d["Beruf"] = "TODO"
                 person_d["Urteil"] = "TODO"
                 person_d["Anlagen"] = "TODO"
 
