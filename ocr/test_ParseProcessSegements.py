@@ -221,3 +221,26 @@ class TestParseProcessSegments(unittest.TestCase):
             "Hitlerbüste im Schulhaus vomFlügel an das Fenster gestellt nat.Eröffnung "
             "der Hauptverhandlung abgelehnt23. Jun. 1933 - 30. Okt. 1933(So E 34/33)"
         )
+
+    def test_get_birthday_of_persons_involved_in_process(self):
+        process_text = (
+            "Ermittlungsverfahren gegen den Landwirt undehemaligen "
+            "Bürgemeister Johann OHMEIER (geb. 11. Okt. 1881), BVP-Mitglied aus Buch (Lkr.Illertissen), "
+            "den Gastwirt Artur STEGMANN(geb. 21. Okt. 1899), NSDAP-Stützpunktleiter,"
+            "den Schuhmacher Jakob HABRES (geb. 3. Jun.1900), Vorstand des kath. Burschenvereins inBuch, "
+            "den Schreiner Anton DOPFER (geb. 19. Apr. 1910), NSDAPMitglied und Hilfspolizist, "
+            "den Ingenieur Karl Dietrich BIBER (geb. 4. Dez. 1907) aus Dattenhausen (Lkr. Illertissen) "
+        )
+        expected_output = [
+            "1881-10-11",
+            "1899-10-21",
+            "1900-06-03",
+            "1910-04-19",
+            "1907-12-04",
+        ]
+        birthday_output = (
+            ParseProcessSegements.get_birthday_of_persons_involved_in_process(
+                process_text
+            )
+        )
+        self.assertEqual(expected_output, birthday_output)

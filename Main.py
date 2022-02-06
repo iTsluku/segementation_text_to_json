@@ -7,6 +7,7 @@ from ocr.ParseProcessSegements import (
     get_first_name_of_persons_involved_in_process,
     get_last_name_of_persons_involved_in_process,
     get_occupation_of_persons_involved_in_process,
+    get_birthday_of_persons_involved_in_process,
 )
 from ocr.PreprocessOcrOutput import fix_first_last_name_no_whitespace
 from pathlib import Path
@@ -212,6 +213,7 @@ def parse_segments(process_paragraphs: List[str]) -> List[dict]:
         first_names = get_first_name_of_persons_involved_in_process(p)
         last_names = get_last_name_of_persons_involved_in_process(p)
         occupations = get_occupation_of_persons_involved_in_process(p)
+        birthdays = get_birthday_of_persons_involved_in_process(p)
 
         # TODO don't kill whole paragraph stack if one fails
         if number_of_persons != len(first_names) and number_of_persons != (last_names):
@@ -220,6 +222,17 @@ def parse_segments(process_paragraphs: List[str]) -> List[dict]:
         if number_of_persons != len(occupations):
             raise OccupationException
 
+        if number_of_persons != len(birthdays):
+            # TODO debug and apply variance-handling to regex expressions
+            print("---")
+            print(f"{first_names=}")
+            print(f"{last_names=}")
+            print(f"{len(birthdays)}/{number_of_persons}")
+            print(birthdays)
+            print(p)
+            print("---")
+            raise BirthdateException
+
         d["Personen"] = [None] * number_of_persons
 
         for i in range(number_of_persons):
@@ -227,6 +240,7 @@ def parse_segments(process_paragraphs: List[str]) -> List[dict]:
             d["Personen"][i]["Vorname"] = first_names[i]
             d["Personen"][i]["Nachname"] = last_names[i]
             d["Personen"][i]["Beruf"] = occupations[i]
+            d["Personen"][i]["Geburtsdatum"] = birthdays[i]
 
         paragraphs_as_dict.append(d)
 
@@ -269,7 +283,6 @@ def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]
             d["Prozessnummer"] = "TODO"
 
             for person_d in d["Personen"]:
-                person_d["Geburtsdatum"] = "TODO"
                 person_d["Urteil"] = "TODO"
                 person_d["Anlagen"] = "TODO"
 
@@ -327,7 +340,7 @@ def exec_app():
     )
     path_invalid_occupation = os.path.join(path_invalid_docs, "occupation")
     path_invalid_person_name = os.path.join(path_invalid_docs, "person_name")
-    path_invalid_birthday = os.path.join(path_invalid_docs, "birthday")
+    path_invalid_birthdate = os.path.join(path_invalid_docs, "birthdate")
 
     try:
         Path(path_invalid_docs).mkdir(parents=True, exist_ok=False)
@@ -339,14 +352,14 @@ def exec_app():
         shutil.rmtree(path_invalid_paragraph_segmentation, ignore_errors=True)
         shutil.rmtree(path_invalid_occupation, ignore_errors=True)
         shutil.rmtree(path_invalid_person_name, ignore_errors=True)
-        shutil.rmtree(path_invalid_birthday, ignore_errors=True)
+        shutil.rmtree(path_invalid_birthdate, ignore_errors=True)
         Path(path_invalid_docs).mkdir(parents=True, exist_ok=True)
         Path(path_invalid_document_name).mkdir(parents=True, exist_ok=True)
         Path(path_invalid_id_paragraph).mkdir(parents=True, exist_ok=True)
         Path(path_invalid_paragraph_segmentation).mkdir(parents=True, exist_ok=True)
         Path(path_invalid_occupation).mkdir(parents=True, exist_ok=True)
         Path(path_invalid_person_name).mkdir(parents=True, exist_ok=True)
-        Path(path_invalid_birthday).mkdir(parents=True, exist_ok=True)
+        Path(path_invalid_birthdate).mkdir(parents=True, exist_ok=True)
     process_types = []
 
     for path, dir, files in os.walk(path_txt):
