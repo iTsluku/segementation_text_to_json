@@ -13,10 +13,10 @@ class GroupingIndex(object):
 
 def fix_first_last_name_no_whitespace(text: str) -> str:
     pattern_first_second_name_no_whitespace = re.compile(
-        r"([A-ZÄÖU][a-zäöü]+)([A-ZÄÖÜ]+)"
+        r"([A-ZÄÖÜ][a-zäöü]+)([A-ZÄÖÜ-]{3,})(?=[\s(,])"
     )
     pattern_first_second_name_no_whitespace_together = re.compile(
-        r"([A-ZÄÖU][a-zäöü]+[A-ZÄÖÜ]+)"
+        r"([A-ZÄÖÜ][a-zäöü]+[A-ZÄÖÜ-]{3,})(?=[\s(,])"
     )
     name_groupings = pattern_first_second_name_no_whitespace.findall(text)
     replacements = [f"{x} {y}" for (x, y) in name_groupings]
