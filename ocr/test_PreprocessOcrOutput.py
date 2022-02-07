@@ -18,3 +18,19 @@ class TestPreprocessOcrOutput(unittest.TestCase):
             ocr_output
         )
         self.assertEqual(expected_result, preprocessed_ocr_output)
+
+    def test_split_words_with_multiple_capital_characters_before_occupation(self):
+        ocr_output = (
+            "Prozeß gegen den VersicherungsinspektorGeorg SCHREYEGG (geo. 10. Apr. 1889) ausMünchen, "
+            "früher SPD-Mitglied, wegen Außerungen uber Hitier.Urteil: 2 Jahre 4 Monate Gefängnis"
+            "($ 2 HG)6. Okt. 1940 - 19. Feb. 1943(1 KMs So 11/41)"
+        )
+        expected_result = (
+            "Prozeß gegen den Versicherungsinspektor Georg SCHREYEGG (geo. 10. Apr. 1889) ausMünchen, "
+            "früher SPD-Mitglied, wegen Außerungen uber Hitier.Urteil: 2 Jahre 4 Monate Gefängnis"
+            "($ 2 HG)6. Okt. 1940 - 19. Feb. 1943(1 KMs So 11/41)"
+        )
+        preprocessed_ocr_output = PreprocessOcrOutput.split_words_with_multiple_capital_characters_before_occupation(
+            ocr_output
+        )
+        self.assertEqual(expected_result, preprocessed_ocr_output)

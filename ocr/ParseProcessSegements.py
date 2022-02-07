@@ -22,21 +22,18 @@ month_number = {
     "Dez": "12",
 }
 
-pattern_person = re.compile(
-    r"(?:den|die)\s?([A-ZÄÖÜ][a-zäöü-]+)\s(?:[A-ZÄÖÜ][a-zäöü-]+\s)+[A-ZÄÖÜ-]{3,}(?=[\s(,])"
-)
+pattern_person = re.compile(r"(?:(?:[A-ZÄÖÜ][a-zäöü-]+)+\s)+([A-ZÄÖÜ-]{3,})(?=[\s(,])")
 pattern_first_name_person = re.compile(
-    r"(?:den|die)\s?[A-ZÄÖÜ][a-zäöü-]+\s((?:[A-ZÄÖÜ][a-zäöü-]+\s)+)[A-ZÄÖÜ-]{3,}(?=[\s(,])"
+    r"(?:den|die)\s?[A-ZÄÖÜ][a-zäöü-]+\s((?:(?:[A-ZÄÖÜ][a-zäöü-]+)+\s)+)[A-ZÄÖÜ-]{3,}(?=[\s(,])"
 )
 pattern_last_name_person = re.compile(
-    r"(?:den|die)\s?[A-ZÄÖÜ][a-zäöü-]+\s(?:[A-ZÄÖÜ][a-zäöü-]+\s)+([A-ZÄÖÜ-]{3,})(?=[\s(,])"
+    r"(?:den|die)\s?[A-ZÄÖÜ][a-zäöü-]+\s(?:(?:[A-ZÄÖÜ][a-zäöü-]+)+\s)+([A-ZÄÖÜ-]{3,})(?=[\s(,])"
 )
 pattern_occupation_person = re.compile(
-    r"(?:den|die)\s?([A-ZÄÖÜ][a-zäöü-]+)\s(?:[A-ZÄÖÜ][a-zäöü-]+\s)+[A-ZÄÖÜ-]{3,}(?=[\s(,])"
+    r"(?:den|die)\s?([A-ZÄÖÜ][a-zäöü-]+)\s(?:(?:[A-ZÄÖÜ][a-zäöü-]+)+\s)+[A-ZÄÖÜ-]{3,}(?=[\s(,])"
 )
-s = "Bürgemeister Johann OHMEIER (geb. 11. Okt. 1881), BVP-Mitglied aus Buch (Lkr.Illertissen), "
 pattern_birthday_person = re.compile(
-    r"[A-ZÄÖÜ][a-zäöü-]+\s(?:[A-ZÄÖÜ][a-zäöü-]+\s)+[A-ZÄÖÜ-]{3,}"
+    r"(?:[A-ZÄÖÜ][a-zäöü-]+\s)+[A-ZÄÖÜ-]{3,}"
     r"\s?\(\s?\w{3}(?:\s|\.)?\s?(\d{1,2})(?:\s|\.)?\s?([JFMASOND][a-z]+)(?:\s|\.)?\s?(\d{4})\s?\)"
 )
 

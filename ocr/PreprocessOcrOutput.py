@@ -26,3 +26,20 @@ def fix_first_last_name_no_whitespace(text: str) -> str:
         output,
     )
     return output
+
+
+def split_words_with_multiple_capital_characters_before_occupation(
+    process_text: str,
+) -> str:
+    a_b_sep = re.compile(
+        r"([A-ZÄÖÜ-][a-zäöü-]+)([A-ZÄÖÜ-][a-zäöü-]+)(?=\s[A-ZÄÖÜ-]{3,})"
+    )
+    a_and_b = re.compile(r"([A-ZÄÖÜ-][a-zäöü-]+[A-ZÄÖÜ-][a-zäöü-]+)(?=\s[A-ZÄÖÜ-]{3,})")
+    name_groupings = a_b_sep.findall(process_text)
+    replacements = [f"{x} {y}" for (x, y) in name_groupings]
+    output = process_text
+    output = a_and_b.sub(
+        GroupingIndex(replacements),
+        output,
+    )
+    return output

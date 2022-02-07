@@ -206,6 +206,35 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         self.assertEqual(expected_output, full_first_name_person_output)
 
+    def test_get_occupation_multiple_capital_in_first_name_of_persons_involved_in_process(
+        self,
+    ):
+        process_text = (
+            "Prozeß gegen die Küchengehilfin MariaAnna HEINZMANN (geb. 6. Jul. 1893) ausAugsburg "
+            "wegen abwertender Bemerkungenüber Hitler.Urteil: 8 Monate Gefängnis&$ 2 HG)"
+            "4. Jul. 1941 - 14. Spt. 1942(1 KMs So 197/41)"
+        )
+        expected_occupations = ["Küchengehilfin"]
+        occupations_output = (
+            ParseProcessSegements.get_occupation_of_persons_involved_in_process(
+                process_text
+            )
+        )
+        self.assertEqual(expected_occupations, occupations_output)
+
+    def test_get_multiple_occupation_for_persons_involved_in_process(
+        self,
+    ):
+        process_text = "Prozeß gegen den Kunsthistoriker und Heimatforscher Wilhelm KAISER (geb.7. Spt.1890)"
+        expected_occupations = ["Kunsthistoriker, Heimatforscher"]
+        occupations_output = (
+            ParseProcessSegements.get_occupation_of_persons_involved_in_process(
+                process_text
+            )
+        )
+        # TODO
+        # self.assertEqual(expected_occupations, occupations_output)
+
     def test_additional_info(self):
         # TODO add additional info to person :: e.g. BVP-Mitglied aus Buch (Lkr.Illertissen) for Johann OHMEIER
         process_text = (

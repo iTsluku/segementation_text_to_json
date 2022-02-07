@@ -9,7 +9,10 @@ from ocr.ParseProcessSegements import (
     get_occupation_of_persons_involved_in_process,
     get_birthday_of_persons_involved_in_process,
 )
-from ocr.PreprocessOcrOutput import fix_first_last_name_no_whitespace
+from ocr.PreprocessOcrOutput import (
+    fix_first_last_name_no_whitespace,
+    split_words_with_multiple_capital_characters_before_occupation,
+)
 from pathlib import Path
 from typing import List
 
@@ -200,6 +203,11 @@ def preprocess_paragraphs(paragraphs: List[str]) -> List[str]:
         preprocessed_paragraph = fix_first_last_name_no_whitespace(
             preprocessed_paragraph
         )
+        preprocessed_paragraph = (
+            split_words_with_multiple_capital_characters_before_occupation(
+                preprocessed_paragraph
+            )
+        )
         preprocessed_paragraphs.append(preprocessed_paragraph)
     return preprocessed_paragraphs
 
@@ -217,20 +225,31 @@ def parse_segments(process_paragraphs: List[str]) -> List[dict]:
 
         # TODO don't kill whole paragraph stack if one fails
         if number_of_persons != len(first_names) and number_of_persons != (last_names):
+            if True:
+                # TODO debug and apply variance-handling to regex expressions
+                print("---")
+                print(f"{first_names=}")
+                print(f"{last_names=}")
+                print(f"{len(first_names)}/{number_of_persons}")
+                print(f"{len(last_names)}/{number_of_persons}")
+                print(zip(first_names, last_names))
+                print(p)
+                print("---")
             raise PersonNameException
 
         if number_of_persons != len(occupations):
             raise OccupationException
 
         if number_of_persons != len(birthdays):
-            # TODO debug and apply variance-handling to regex expressions
-            print("---")
-            print(f"{first_names=}")
-            print(f"{last_names=}")
-            print(f"{len(birthdays)}/{number_of_persons}")
-            print(birthdays)
-            print(p)
-            print("---")
+            if False:
+                # TODO debug and apply variance-handling to regex expressions
+                print("---")
+                print(f"{first_names=}")
+                print(f"{last_names=}")
+                print(f"{len(birthdays)}/{number_of_persons}")
+                print(birthdays)
+                print(p)
+                print("---")
             raise BirthdateException
 
         d["Personen"] = [None] * number_of_persons
