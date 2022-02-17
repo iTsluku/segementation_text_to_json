@@ -214,85 +214,91 @@ def preprocess_paragraphs(paragraphs: List[str]) -> List[str]:
     return preprocessed_paragraphs
 
 
-def parse_segments(
-    process_paragraphs: List[str], file_path: str, file_name: str
-) -> List[dict]:
+def parse_segment(
+    paragraph_as_dict: dict, process_paragraph: str, file_path: str, file_name: str
+) -> dict:
     global valid_process_n, parsed_process_n, invalid_occupation_n, invalid_birthdate_n, invalid_person_name
-    paragraphs_as_dict = []
+    p = process_paragraph
+    d = paragraph_as_dict
+    try:
+        number_of_persons = get_number_of_persons_involved_in_process(p)
+        first_names = get_first_name_of_persons_involved_in_process(p)
+        last_names = get_last_name_of_persons_involved_in_process(p)
+        occupations = get_occupation_of_persons_involved_in_process(p)
+        birthdays = get_birthday_of_persons_involved_in_process(p)
 
-    for p in process_paragraphs:
-        try:
-            d = {}
-            number_of_persons = get_number_of_persons_involved_in_process(p)
-            first_names = get_first_name_of_persons_involved_in_process(p)
-            last_names = get_last_name_of_persons_involved_in_process(p)
-            occupations = get_occupation_of_persons_involved_in_process(p)
-            birthdays = get_birthday_of_persons_involved_in_process(p)
+        if number_of_persons != len(first_names) and number_of_persons != len(
+            last_names
+        ):
+            """# TODO debug and apply variance-handling to regex expressions
+            print("---")
+            print(f"{first_names=}")
+            print(f"{last_names=}")
+            print(f"{len(first_names)}/{number_of_persons}")
+            print(f"{len(last_names)}/{number_of_persons}")
+            print(zip(first_names, last_names))
+            print(p)
+            print("---")"""
+            raise PersonNameException
 
-            if number_of_persons != len(first_names) and number_of_persons != (
-                last_names
-            ):
-                if True:
-                    # TODO debug and apply variance-handling to regex expressions
-                    print("---")
-                    print(f"{first_names=}")
-                    print(f"{last_names=}")
-                    print(f"{len(first_names)}/{number_of_persons}")
-                    print(f"{len(last_names)}/{number_of_persons}")
-                    print(zip(first_names, last_names))
-                    print(p)
-                    print("---")
-                raise PersonNameException
+        if number_of_persons != len(occupations):
+            """
+            # TODO debug and apply variance-handling to regex expressions
+            print("---")
+            print(f"{first_names=}")
+            print(f"{last_names=}")
+            print(f"{len(occupations)}/{number_of_persons}")
+            print(occupations)
+            print(p)
+            print("---")"""
+            raise OccupationException
 
-            if number_of_persons != len(occupations):
-                raise OccupationException
+        if number_of_persons != len(birthdays):
+            """
+            # TODO debug and apply variance-handling to regex expressions
+            print("---")
+            print(f"{first_names=}")
+            print(f"{last_names=}")
+            print(f"{len(birthdays)}/{number_of_persons}")
+            print(birthdays)
+            print(p)
+            print("---")"""
+            raise BirthdateException
 
-            if number_of_persons != len(birthdays):
-                if False:
-                    # TODO debug and apply variance-handling to regex expressions
-                    print("---")
-                    print(f"{first_names=}")
-                    print(f"{last_names=}")
-                    print(f"{len(birthdays)}/{number_of_persons}")
-                    print(birthdays)
-                    print(p)
-                    print("---")
-                raise BirthdateException
+        d["Personen"] = [None] * number_of_persons
 
-            d["Personen"] = [None] * number_of_persons
+        for i in range(number_of_persons):
+            d["Personen"][i] = {}
+            d["Personen"][i]["Vorname"] = first_names[i]
+            d["Personen"][i]["Nachname"] = last_names[i]
+            d["Personen"][i]["Beruf"] = occupations[i]
+            d["Personen"][i]["Geburtsdatum"] = birthdays[i]
+            # TODO
+            d["Personen"][i]["Urteil"] = "TODO"
+            d["Personen"][i]["Anlagen"] = "TODO"
 
-            for i in range(number_of_persons):
-                d["Personen"][i] = {}
-                d["Personen"][i]["Vorname"] = first_names[i]
-                d["Personen"][i]["Nachname"] = last_names[i]
-                d["Personen"][i]["Beruf"] = occupations[i]
-                d["Personen"][i]["Geburtsdatum"] = birthdays[i]
-                # TODO
-                d["Personen"][i]["Urteil"] = "TODO"
-                d["Personen"][i]["Anlagen"] = "TODO"
-
-            valid_process_n += 1
-            paragraphs_as_dict.append(d)
-        except OccupationException:
-            source = file_path
-            dest = os.path.join(cwd, "output/invalid_documents/occupation/" + file_name)
-            shutil.copyfile(source, dest)
-            invalid_occupation_n += 1
-        except PersonNameException:
-            source = file_path
-            dest = os.path.join(
-                cwd, "output/invalid_documents/person_name/" + file_name
-            )
-            shutil.copyfile(source, dest)
-            invalid_person_name += 1
-        except BirthdateException:
-            source = file_path
-            dest = os.path.join(cwd, "output/invalid_documents/birthdate/" + file_name)
-            shutil.copyfile(source, dest)
-            invalid_birthdate_n += 1
-        finally:
-            parsed_process_n += 1
-    return paragraphs_as_dict
+        valid_process_n += 1
+    except OccupationException:
+        source = file_path
+        dest = os.path.join(cwd, "output/invalid_documents/occupation/" + file_name)
+        shutil.copyfile(source, dest)
+        invalid_occupation_n += 1
+        d = {}
+    except PersonNameException:
+        source = file_path
+        dest = os.path.join(cwd, "output/invalid_documents/person_name/" + file_name)
+        shutil.copyfile(source, dest)
+        invalid_person_name += 1
+        d = {}
+    except BirthdateException:
+        source = file_path
+        dest = os.path.join(cwd, "output/invalid_documents/birthdate/" + file_name)
+        shutil.copyfile(source, dest)
+        invalid_birthdate_n += 1
+        d = {}
+    finally:
+        parsed_process_n += 1
+    return d
 
 
 def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]:
@@ -317,20 +323,22 @@ def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]
 
         parsed_process_segements_n += len(process_paragraphs)
 
-        # TODO apply
-        paragraphs_as_dict = parse_segments(process_paragraphs, file_path, file_name)
+        for i, process_paragraph in enumerate(process_paragraphs):
+            paragraph_as_dict = {
+                "Id_Archiv_Alt": old_ids[i],
+                "Id_Archiv_Neu": new_ids[i],
+                "Id_Seite": id,
+                "Text": process_paragraph,
+                "Prozessnummer": "TODO",
+            }
+            paragraph_as_dict = parse_segment(
+                paragraph_as_dict, process_paragraph, file_path, file_name
+            )
+            # check if dict is empty --exception was raised while parsing segments for the given paragraph
+            if paragraph_as_dict:
+                l.append(paragraph_as_dict)
 
-        for i, d in enumerate(paragraphs_as_dict):
-            d["Id_Archiv_Alt"] = old_ids[i]
-            d["Id_Archiv_Neu"] = new_ids[i]
-            d["Id_Seite"] = id
-            d["Text"] = process_paragraphs[i]
-            # TODO
-            d["Prozessnummer"] = "TODO"
-
-            l.append(d)
-
-        # end of "parser" -> no expection raised
+        # end of "parser" -> no exception raised
         valid_document_n += 1
 
     except InvalidIdParagraph:
