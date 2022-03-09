@@ -38,21 +38,21 @@ pattern_birthday_person = re.compile(
 )
 
 
-def get_number_of_persons_involved_in_process(paragraph_text: str) -> int:
+def get_number_of_people_involved_in_process(paragraph_text: str) -> int:
     person_groupings = pattern_person.findall(paragraph_text)
     return len(person_groupings)
 
 
-def get_first_name_of_persons_involved_in_process(paragraph_text: str) -> List[str]:
+def get_first_name_of_people_involved_in_process(paragraph_text: str) -> List[str]:
     # remove ending whitespace
     return [x[:-1] for x in pattern_first_name_person.findall(paragraph_text)]
 
 
-def get_last_name_of_persons_involved_in_process(paragraph_text: str) -> List[str]:
+def get_last_name_of_people_involved_in_process(paragraph_text: str) -> List[str]:
     return pattern_last_name_person.findall(paragraph_text)
 
 
-def get_occupation_of_persons_involved_in_process(paragraph_text: str) -> List[str]:
+def get_occupation_of_people_involved_in_process(paragraph_text: str) -> List[str]:
     return pattern_occupation_person.findall(paragraph_text)
 
 
@@ -69,6 +69,6 @@ def parse_birthday_tuples(birthdays: List[Tuple[str, str, str]]) -> List[str]:
     return formatted_birthdays
 
 
-def get_birthday_of_persons_involved_in_process(paragraph_text: str) -> List[str]:
+def get_birthday_of_people_involved_in_process(paragraph_text: str) -> List[str]:
     birthdays = pattern_birthday_person.findall(paragraph_text)
     return parse_birthday_tuples(birthdays)

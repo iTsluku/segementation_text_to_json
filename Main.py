@@ -3,11 +3,11 @@ import json
 import shutil
 
 from ocr.ParseProcessSegements import (
-    get_number_of_persons_involved_in_process,
-    get_first_name_of_persons_involved_in_process,
-    get_last_name_of_persons_involved_in_process,
-    get_occupation_of_persons_involved_in_process,
-    get_birthday_of_persons_involved_in_process,
+    get_number_of_people_involved_in_process,
+    get_first_name_of_people_involved_in_process,
+    get_last_name_of_people_involved_in_process,
+    get_occupation_of_people_involved_in_process,
+    get_birthday_of_people_involved_in_process,
 )
 from ocr.PreprocessOcrOutput import (
     fix_first_last_name_no_whitespace,
@@ -38,61 +38,61 @@ class Error(Exception):
 
 
 class InvalidDocumentName(Error):
-    """Raised when document name is not valid."""
+    """Raised when the document name is not valid."""
 
     pass
 
 
 class InvalidIdParagraph(Error):
-    """Raised when document id paragraph is not valid."""
+    """Raised when the document id paragraph is not valid."""
 
     pass
 
 
 class ParagraphSegmentationException(Error):
-    """Raised when paragraphs can't be segmented."""
+    """Raised when the paragraphs can't be segmented."""
 
     pass
 
 
 class ProcessNumberException(Error):
-    """Raised when process number can't be parsed, related to process documents."""
+    """Raised when the process number can't be parsed, related to process documents."""
 
     pass
 
 
 class ProcedureNumberException(Error):
-    """Raised when procedure number can't be parsed, related to proceedings discontinued by the courts."""
+    """Raised when the procedure number can't be parsed, related to proceedings discontinued by the courts."""
 
     pass
 
 
 class PersonNameException(Error):
-    """Raised when names of persons can't be parsed."""
+    """Raised when the name of a person can't be parsed."""
 
     pass
 
 
 class OccupationException(Error):
-    """Raised when occupation can't be parsed."""
+    """Raised when the occupation can't be parsed."""
 
     pass
 
 
 class BirthdateException(Error):
-    """Raised when birthdate can't be parsed."""
+    """Raised when the birthdate can't be parsed."""
 
     pass
 
 
 class JudgmentException(Error):
-    """Raised when judgment can't be parsed."""
+    """Raised when the judgment can't be parsed."""
 
     pass
 
 
 class AttachmentsException(Error):
-    """Raised when attachments can't be parsed."""
+    """Raised when the attachments can't be parsed."""
 
     pass
 
@@ -221,53 +221,51 @@ def parse_segment(
     p = process_paragraph
     d = paragraph_as_dict
     try:
-        number_of_persons = get_number_of_persons_involved_in_process(p)
-        first_names = get_first_name_of_persons_involved_in_process(p)
-        last_names = get_last_name_of_persons_involved_in_process(p)
-        occupations = get_occupation_of_persons_involved_in_process(p)
-        birthdays = get_birthday_of_persons_involved_in_process(p)
+        number_of_people = get_number_of_people_involved_in_process(p)
+        first_names = get_first_name_of_people_involved_in_process(p)
+        last_names = get_last_name_of_people_involved_in_process(p)
+        occupations = get_occupation_of_people_involved_in_process(p)
+        birthdays = get_birthday_of_people_involved_in_process(p)
 
-        if number_of_persons != len(first_names) and number_of_persons != len(
-            last_names
-        ):
-            """# TODO debug and apply variance-handling to regex expressions
+        if number_of_people != len(first_names) and number_of_people != len(last_names):
+            # TODO debug and apply variance-handling to regex expressions
             print("---")
             print(f"{first_names=}")
             print(f"{last_names=}")
-            print(f"{len(first_names)}/{number_of_persons}")
-            print(f"{len(last_names)}/{number_of_persons}")
+            print(f"{len(first_names)}/{number_of_people}")
+            print(f"{len(last_names)}/{number_of_people}")
             print(zip(first_names, last_names))
             print(p)
-            print("---")"""
+            print("---")
             raise PersonNameException
 
-        if number_of_persons != len(occupations):
+        if number_of_people != len(occupations):
             """
             # TODO debug and apply variance-handling to regex expressions
             print("---")
             print(f"{first_names=}")
             print(f"{last_names=}")
-            print(f"{len(occupations)}/{number_of_persons}")
+            print(f"{len(occupations)}/{number_of_people}")
             print(occupations)
             print(p)
             print("---")"""
             raise OccupationException
 
-        if number_of_persons != len(birthdays):
+        if number_of_people != len(birthdays):
             """
             # TODO debug and apply variance-handling to regex expressions
             print("---")
             print(f"{first_names=}")
             print(f"{last_names=}")
-            print(f"{len(birthdays)}/{number_of_persons}")
+            print(f"{len(birthdays)}/{number_of_people}")
             print(birthdays)
             print(p)
             print("---")"""
             raise BirthdateException
 
-        d["Personen"] = [None] * number_of_persons
+        d["Personen"] = [None] * number_of_people
 
-        for i in range(number_of_persons):
+        for i in range(number_of_people):
             d["Personen"][i] = {}
             d["Personen"][i]["Vorname"] = first_names[i]
             d["Personen"][i]["Nachname"] = last_names[i]

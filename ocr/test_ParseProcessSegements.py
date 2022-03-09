@@ -3,7 +3,7 @@ from ocr import ParseProcessSegements
 
 
 class TestParseProcessSegments(unittest.TestCase):
-    def test_get_number_of_persons_involved_in_process(self):
+    def test_get_number_of_people_involved_in_process(self):
         process_text = (
             "Prozeß gegen "
             "den Bauhilfsarbeiter Alois DUNST (geb. 11. Jun. 1901), "
@@ -25,17 +25,15 @@ class TestParseProcessSegments(unittest.TestCase):
             "Ebenbichler, Hochlechner und Gruber Frei-spruch."
             "1. Feb.1933 - 10. Mai 1935 (S Pr 28 / 33)"
         )
-        expected_number_of_persons_involved_in_process = 8  # not 11!
-        number_of_persons_output = (
-            ParseProcessSegements.get_number_of_persons_involved_in_process(
-                process_text
-            )
+        expected_number_of_people_involved_in_process = 8  # not 11!
+        number_of_people_output = (
+            ParseProcessSegements.get_number_of_people_involved_in_process(process_text)
         )
         self.assertEqual(
-            expected_number_of_persons_involved_in_process, number_of_persons_output
+            expected_number_of_people_involved_in_process, number_of_people_output
         )
 
-    def test_get_first_name_of_persons_involved_in_process(self):
+    def test_get_first_name_of_people_involved_in_process(self):
         process_text = (
             "Prozeß gegen "
             "den Bauhilfsarbeiter Alois DUNST (geb. 11. Jun. 1901), "
@@ -57,7 +55,7 @@ class TestParseProcessSegments(unittest.TestCase):
             "Ebenbichler, Hochlechner und Gruber Frei-spruch."
             "1. Feb.1933 - 10. Mai 1935 (S Pr 28 / 33)"
         )
-        expected_first_name_of_persons_involved_in_process = [
+        expected_first_name_of_people_involved_in_process = [
             "Alois",
             "Johann",
             "Fritz",
@@ -67,17 +65,17 @@ class TestParseProcessSegments(unittest.TestCase):
             "Anton",
             "Josef",
         ]
-        first_name_persons_output = (
-            ParseProcessSegements.get_first_name_of_persons_involved_in_process(
+        first_name_people_output = (
+            ParseProcessSegements.get_first_name_of_people_involved_in_process(
                 process_text
             )
         )
         self.assertEqual(
-            expected_first_name_of_persons_involved_in_process,
-            first_name_persons_output,
+            expected_first_name_of_people_involved_in_process,
+            first_name_people_output,
         )
 
-    def test_get_last_name_of_persons_involved_in_process(self):
+    def test_get_last_name_of_people_involved_in_process(self):
         process_text = (
             "Prozeß gegen "
             "den Bauhilfsarbeiter Alois DUNST (geb. 11. Jun. 1901), "
@@ -99,7 +97,7 @@ class TestParseProcessSegments(unittest.TestCase):
             "Ebenbichler, Hochlechner und Gruber Frei-spruch."
             "1. Feb.1933 - 10. Mai 1935 (S Pr 28 / 33)"
         )
-        expected_last_name_of_persons_involved_in_process = [
+        expected_last_name_of_people_involved_in_process = [
             "DUNST",
             "BRAUNWIESER",
             "EGGER",
@@ -109,33 +107,33 @@ class TestParseProcessSegments(unittest.TestCase):
             "HUBER",
             "TRIENDL",
         ]
-        last_name_persons_output = (
-            ParseProcessSegements.get_last_name_of_persons_involved_in_process(
+        last_name_people_output = (
+            ParseProcessSegements.get_last_name_of_people_involved_in_process(
                 process_text
             )
         )
         self.assertEqual(
-            expected_last_name_of_persons_involved_in_process, last_name_persons_output
+            expected_last_name_of_people_involved_in_process, last_name_people_output
         )
 
-    def test_get_last_name_of_persons_involved_in_process_look_ahead(self):
+    def test_get_last_name_of_people_involved_in_process_look_ahead(self):
         process_text = "... Test NSDAP-Blabla ..."
         wrong_output = ["NSDAP"]
         last_name_person_output = (
-            ParseProcessSegements.get_last_name_of_persons_involved_in_process(
+            ParseProcessSegements.get_last_name_of_people_involved_in_process(
                 process_text
             )
         )
         self.assertNotEqual(wrong_output, last_name_person_output)
 
-    def test_get_multiple_first_name_of_persons_involved_in_process(self):
+    def test_get_multiple_first_name_of_people_involved_in_process(self):
         process_text = (
             "Prozeß gegen den Bäcker Peter Markus PREISSL (geb.28. Jun. 1911) "
             "aus Himmelmoos Gde. Niederaudorf (Lkr. Rosenheim)..."
         )
         expected_output = ["Peter Markus"]
         full_first_name_person_output = (
-            ParseProcessSegements.get_first_name_of_persons_involved_in_process(
+            ParseProcessSegements.get_first_name_of_people_involved_in_process(
                 process_text
             )
         )
@@ -148,13 +146,13 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         expected_output = ["Bäckermeisterin"]
         full_first_name_person_output = (
-            ParseProcessSegements.get_occupation_of_persons_involved_in_process(
+            ParseProcessSegements.get_occupation_of_people_involved_in_process(
                 process_text
             )
         )
         self.assertEqual(expected_output, full_first_name_person_output)
 
-    def test_get_occupation_of_persons_involved_in_process(self):
+    def test_get_occupation_of_people_involved_in_process(self):
         process_text = (
             "Prozeß gegen "
             "den Bauhilfsarbeiter Alois DUNST (geb. 11. Jun. 1901), "
@@ -187,7 +185,7 @@ class TestParseProcessSegments(unittest.TestCase):
             "Maler",
         ]
         occupations_output = (
-            ParseProcessSegements.get_occupation_of_persons_involved_in_process(
+            ParseProcessSegements.get_occupation_of_people_involved_in_process(
                 process_text
             )
         )
@@ -200,13 +198,13 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         expected_output = ["Gastwirt", "Schuhmacher"]
         full_first_name_person_output = (
-            ParseProcessSegements.get_occupation_of_persons_involved_in_process(
+            ParseProcessSegements.get_occupation_of_people_involved_in_process(
                 process_text
             )
         )
         self.assertEqual(expected_output, full_first_name_person_output)
 
-    def test_get_occupation_multiple_capital_in_first_name_of_persons_involved_in_process(
+    def test_get_occupation_multiple_capital_in_first_name_of_people_involved_in_process(
         self,
     ):
         process_text = (
@@ -216,19 +214,19 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         expected_occupations = ["Küchengehilfin"]
         occupations_output = (
-            ParseProcessSegements.get_occupation_of_persons_involved_in_process(
+            ParseProcessSegements.get_occupation_of_people_involved_in_process(
                 process_text
             )
         )
         self.assertEqual(expected_occupations, occupations_output)
 
-    def test_get_multiple_occupation_for_persons_involved_in_process(
+    def test_get_multiple_occupation_for_people_involved_in_process(
         self,
     ):
         process_text = "Prozeß gegen den Kunsthistoriker und Heimatforscher Wilhelm KAISER (geb.7. Spt.1890)"
         expected_occupations = ["Kunsthistoriker, Heimatforscher"]
         occupations_output = (
-            ParseProcessSegements.get_occupation_of_persons_involved_in_process(
+            ParseProcessSegements.get_occupation_of_people_involved_in_process(
                 process_text
             )
         )
@@ -251,7 +249,7 @@ class TestParseProcessSegments(unittest.TestCase):
             "der Hauptverhandlung abgelehnt23. Jun. 1933 - 30. Okt. 1933(So E 34/33)"
         )
 
-    def test_get_birthday_of_persons_involved_in_process(self):
+    def test_get_birthday_of_people_involved_in_process(self):
         process_text = (
             "Ermittlungsverfahren gegen den Landwirt undehemaligen "
             "Bürgemeister Johann OHMEIER (geb. 11. Okt. 1881), BVP-Mitglied aus Buch (Lkr.Illertissen), "
@@ -268,7 +266,7 @@ class TestParseProcessSegments(unittest.TestCase):
             "1907-12-04",
         ]
         birthday_output = (
-            ParseProcessSegements.get_birthday_of_persons_involved_in_process(
+            ParseProcessSegements.get_birthday_of_people_involved_in_process(
                 process_text
             )
         )
