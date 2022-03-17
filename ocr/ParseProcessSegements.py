@@ -40,7 +40,7 @@ pattern_occupation_person = re.compile(
 )
 pattern_birthday_person = re.compile(
     r"(?:[A-ZÄÖÜ][a-zäöü-]+\s)+[A-ZÄÖÜ-]{3,}"
-    r"\s?\(\s?\w{1,3}(?:\s|\.)?\s?(\d{1,2})(?:\s|\.)?\s?([JFMASOND][a-z]+)(?:\s|\.)?\s?(\d{4})\s?\)"
+    r"\s?\(\s?\w{1,3}(?:\s|\.|,)?\s?(\d{1,2})(?:\s|\.|,)?\s?([JFMASOND][a-z]+)(?:\s|\.|,)?\s?(\d{4})\s?\)"
 )
 
 
