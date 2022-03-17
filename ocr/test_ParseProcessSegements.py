@@ -232,6 +232,46 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         self.assertEqual(expected_occupations, occupations_output)
 
+    def test_occupation_prefix_ldw(self):
+        process_text = (
+            "Prozeß gegen die ldw. Arbeiterin Viktoria WUNDER (geb. 12. Mai 1918) aus Prittriching "
+            "(Lkr. Landsberg) wegen verbotenenUmgangs mit dem französischen Kriegsgefangenen George BOLLET."
+        )
+        expected_occupations = ["ldw. Arbeiterin"]
+        occupations_output = (
+            ParseProcessSegements.get_occupation_of_people_involved_in_process(
+                process_text
+            )
+        )
+        self.assertEqual(expected_occupations, occupations_output)
+
+    def test_occupation_prefix_kath(self):
+        process_text = (
+            "Prozeß gegen den kath. Pfarrer Franz Xaver DUSCHL (geb. 17. Feb. 1875) aus Mittich(Lkr. Griesbach) "
+            "wegen der Behauptung, eswürden nicht alle Kriegsverluste bekanntgegeben, um das Volk nicht zu beunruhigen."
+            " Urteil: 3 Monate Gefängnis$ 2 HG; 8 130a StGB)27. Dez. 1940 - 19. Dez. 1941(1 KMs So 59/41)"
+        )
+        expected_occupations = ["kath. Pfarrer"]
+        occupations_output = (
+            ParseProcessSegements.get_occupation_of_people_involved_in_process(
+                process_text
+            )
+        )
+        self.assertEqual(expected_occupations, occupations_output)
+
+    def test_occupation_prefix_kfm(self):
+        process_text = (
+            "Prozeß gegen den kfm. Angestellten Franz MAYER (geb. 24. Mrz. 1907) aus Münchenwegen Urkundenfälschung."
+            "Urteil: 10 Monate Gefängnis(33 267,268 StGB)3. Jan. 1941 - 30. Jun. 1944(5 KLs So 57/41)"
+        )
+        expected_occupations = ["kfm. Angestellten"]
+        occupations_output = (
+            ParseProcessSegements.get_occupation_of_people_involved_in_process(
+                process_text
+            )
+        )
+        self.assertEqual(expected_occupations, occupations_output)
+
     def test_additional_info(self):
         # TODO add additional info to person :: e.g. BVP-Mitglied aus Buch (Lkr.Illertissen) for Johann OHMEIER
         process_text = (

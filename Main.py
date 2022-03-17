@@ -227,45 +227,33 @@ def parse_segment(
         occupations = get_occupation_of_people_involved_in_process(p)
         birthdays = get_birthday_of_people_involved_in_process(p)
 
-        if number_of_people != len(first_names) and number_of_people != len(last_names):
-            # TODO debug and apply variance-handling to regex expressions
-            print("---")
-            print(f"{first_names=}")
-            print(f"{last_names=}")
-            print(f"{len(first_names)}/{number_of_people}")
-            print(f"{len(last_names)}/{number_of_people}")
-            print(zip(first_names, last_names))
-            print(p)
-            print("---")
+        first_names_n = len(first_names)
+        last_names_n = len(last_names)
+        occupations_n = len(occupations)
+        birthdays_n = len(birthdays)
+
+        if first_names_n != last_names_n:
+            # segment might address more people/names, but they don't have to be mandatory accused of sth
             raise PersonNameException
 
-        if number_of_people != len(occupations):
-            """
-            # TODO debug and apply variance-handling to regex expressions
-            print("---")
-            print(f"{first_names=}")
-            print(f"{last_names=}")
-            print(f"{len(occupations)}/{number_of_people}")
-            print(occupations)
-            print(p)
-            print("---")"""
+        if last_names_n != occupations_n:
             raise OccupationException
 
-        if number_of_people != len(birthdays):
-            """
-            # TODO debug and apply variance-handling to regex expressions
+        if last_names_n != birthdays_n:
             print("---")
             print(f"{first_names=}")
             print(f"{last_names=}")
-            print(f"{len(birthdays)}/{number_of_people}")
+            print(f"{first_names_n}/{number_of_people}")
+            print(f"{last_names_n}/{number_of_people}")
+            print(zip(first_names, last_names))
             print(birthdays)
             print(p)
-            print("---")"""
+            print("---")
             raise BirthdateException
 
-        d["Personen"] = [None] * number_of_people
+        d["Personen"] = [None] * last_names_n
 
-        for i in range(number_of_people):
+        for i in range(last_names_n):
             d["Personen"][i] = {}
             d["Personen"][i]["Vorname"] = first_names[i]
             d["Personen"][i]["Nachname"] = last_names[i]
