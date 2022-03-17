@@ -272,6 +272,20 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         self.assertEqual(expected_occupations, occupations_output)
 
+    def test_occupation_prefix_landw(self):
+        process_text = (
+            "Prozeß gegen den landw. Arbeiter Johann ZOTT (geb. 22. Jan. 1921) aus Vohburg(Lkr. Pfaffenhofen) "
+            "wegen versuchten Diebstahls.Urteil: 1 Jahr 3 Monate Gefängnis"
+            "(88 43,44,242-244 StGB; $ 2 WVO)31. Jan. 1941 - 25. Mai 1942(4 KLs So 18/41)"
+        )
+        expected_occupations = ["landw. Arbeiter"]
+        occupations_output = (
+            ParseProcessSegements.get_occupation_of_people_involved_in_process(
+                process_text
+            )
+        )
+        self.assertEqual(expected_occupations, occupations_output)
+
     def test_additional_info(self):
         # TODO add additional info to person :: e.g. BVP-Mitglied aus Buch (Lkr.Illertissen) for Johann OHMEIER
         process_text = (

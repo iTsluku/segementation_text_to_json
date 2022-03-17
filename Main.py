@@ -12,6 +12,8 @@ from ocr.ParseProcessSegements import (
 from ocr.PreprocessOcrOutput import (
     fix_first_last_name_no_whitespace,
     split_words_with_multiple_capital_characters_before_occupation,
+    add_missing_whitespace_before_occupation,
+    add_missing_whitespace_before_and_after_word_und,
 )
 from pathlib import Path
 from typing import List
@@ -209,6 +211,12 @@ def preprocess_paragraphs(paragraphs: List[str]) -> List[str]:
             split_words_with_multiple_capital_characters_before_occupation(
                 preprocessed_paragraph
             )
+        )
+        preprocessed_paragraph = add_missing_whitespace_before_occupation(
+            preprocessed_paragraph
+        )
+        preprocess_paragraph = add_missing_whitespace_before_and_after_word_und(
+            preprocessed_paragraph
         )
         preprocessed_paragraphs.append(preprocessed_paragraph)
     return preprocessed_paragraphs
