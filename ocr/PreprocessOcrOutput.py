@@ -78,7 +78,6 @@ def add_missing_whitespace_before_and_after_word_und(process_text: str) -> str:
                 missing_whitespace_cases_processed.append(w)
                 break
     for word in process_text.split():
-        print(word)
         if "und" in word and word in missing_whitespace_cases_processed:
             tokens = word.split("und")
             if tokens[0] == "":

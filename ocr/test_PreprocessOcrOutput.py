@@ -88,3 +88,19 @@ class TestPreprocessOcrOutput(unittest.TestCase):
             )
         )
         self.assertEqual(expected_result, preprocessed_ocr_output)
+
+    def test_whitespace_occupation_word_und(self):
+        ocr_output = (
+            "den MetzgerundGastwirt Xaver SCHMATZ (geb. 17. Feb.1867) BlablaundBlabla"
+        )
+        expected_result = (
+            "den Metzger und Gastwirt Xaver SCHMATZ (geb. 17. Feb.1867) BlablaundBlabla"
+        )
+        wrong_result = "den Metzger und Gastwirt Xaver SCHMATZ (geb. 17. Feb.1867) Blabla und Blabla"
+        preprocessed_ocr_output = (
+            PreprocessOcrOutput.add_missing_whitespace_before_and_after_word_und(
+                ocr_output
+            )
+        )
+        self.assertEqual(expected_result, preprocessed_ocr_output)
+        self.assertNotEqual(wrong_result, preprocessed_ocr_output)
