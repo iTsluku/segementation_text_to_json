@@ -324,3 +324,17 @@ class TestParseProcessSegments(unittest.TestCase):
             )
         )
         self.assertEqual(expected_output, birthday_output)
+
+    def test_ignore_nationality_occupation_prefix(self):
+        process_text = (
+            "Prozeß gegen den polnischen Hilfsarbeiter Jan BAYNO (geb. 8. Dez. 1917) aus "
+            "Münchenwegen versuchter Nowtzucht.Urteil: 3 Jahre Zuchthaus, 3 Jahre Ehrverlust"
+            "(83 43,177 SB)4. Jun. 7941 - 14. A 1944(4 KLs So 46/41)"
+        )
+        expected_occupations = ["Hilfsarbeiter"]
+        occupations_output = (
+            ParseProcessSegements.get_occupation_of_people_involved_in_process(
+                process_text
+            )
+        )
+        self.assertEqual(expected_occupations, occupations_output)

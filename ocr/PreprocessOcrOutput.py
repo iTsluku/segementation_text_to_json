@@ -12,6 +12,12 @@ a_and_b = re.compile(r"([A-ZÄÖÜ-][a-zäöü-]+[A-ZÄÖÜ-][a-zäöü-]+)(?=\s
 pattern_occupation_prefix_missing_whitespace = re.compile(
     r"^(?:den|die)[A-ZÄÖÜ-][a-zäöü-]+$"
 )
+pattern_occupation_and_word_und_missing_whitespace = re.compile(
+    r"(?:den|die)\s?(?:polnischen|polnische)?\s?(?:ldw.|kath.|kfm.|landw.)?\s?"
+    r"((?:[A-ZÄÖÜ][a-zäöü-]+und\s[A-ZÄÖÜ][a-zäöü-]+)|(?:[A-ZÄÖÜ][a-zäöü-]+\sund[A-ZÄÖÜ][a-zäöü-]+)|"
+    r"(?:[A-ZÄÖÜ][a-zäöü-]+und[A-ZÄÖÜ][a-zäöü-]+))\s"
+    r"(?:(?:[A-ZÄÖÜ][a-zäöü-]+)+\s)+[A-ZÄÖÜ-]{3,}(?=[\s(,])"
+)
 
 
 class GroupingIndex(object):
@@ -61,8 +67,19 @@ def add_missing_whitespace_before_occupation(process_text: str) -> str:
 
 def add_missing_whitespace_before_and_after_word_und(process_text: str) -> str:
     processed_words = []
+    missing_whitespace_cases = (
+        pattern_occupation_and_word_und_missing_whitespace.findall(process_text)
+    )
+    missing_whitespace_cases_processed = []
+    for word in missing_whitespace_cases:
+        words = word.split()
+        for w in words:
+            if "und" in w:
+                missing_whitespace_cases_processed.append(w)
+                break
     for word in process_text.split():
-        if "und" in word:
+        print(word)
+        if "und" in word and word in missing_whitespace_cases_processed:
             tokens = word.split("und")
             if tokens[0] == "":
                 word_processed = "und"
