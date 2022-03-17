@@ -224,14 +224,13 @@ class TestParseProcessSegments(unittest.TestCase):
         self,
     ):
         process_text = "Prozeß gegen den Kunsthistoriker und Heimatforscher Wilhelm KAISER (geb.7. Spt.1890)"
-        expected_occupations = ["Kunsthistoriker, Heimatforscher"]
+        expected_occupations = ["Kunsthistoriker und Heimatforscher"]
         occupations_output = (
             ParseProcessSegements.get_occupation_of_people_involved_in_process(
                 process_text
             )
         )
-        # TODO
-        # self.assertEqual(expected_occupations, occupations_output)
+        self.assertEqual(expected_occupations, occupations_output)
 
     def test_additional_info(self):
         # TODO add additional info to person :: e.g. BVP-Mitglied aus Buch (Lkr.Illertissen) for Johann OHMEIER
