@@ -1,5 +1,6 @@
 import unittest
 from ocr import ParseProcessSegements
+from ocr.ParseProcessSegements import get_additional_person_data
 
 
 class TestParseProcessSegments(unittest.TestCase):
@@ -286,14 +287,13 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         self.assertEqual(expected_occupations, occupations_output)
 
-    def test_additional_info(self):
+    def test_get_additional_person_data(self):
         # TODO add additional info to person :: e.g. BVP-Mitglied aus Buch (Lkr.Illertissen) for Johann OHMEIER
         process_text = (
-            "Ermittlungsverfahren gegen den Landwirt undehemaligen "
+            "Ermittlungsverfahren gegen den Landwirt und "
             "Bürgemeister Johann OHMEIER (geb.11. Okt. 1881), BVP-Mitglied aus Buch (Lkr.Illertissen), "
             "den Gastwirt Artur STEGMANN(geb. 21. Okt. 1899), NSDAP-Stützpunktleiter,"
             "den Schuhmacher Jakob HABRES (geb. 3. Jun.1900), Vorstand des kath. Burschenvereins inBuch, "
-            "den Schuhmacher Xaver DOPFER (get. 6.1907), NSDAP-Mitglied, Hilfspolizist ausUnterroth (Lkr. Illertissen), "
             "den Schreiner Anton DOPFER (geb. 19. Apr. 1910), NSDAPMitglied und Hilfspolizist, "
             "den Ingenieur Karl BIBER (geb. 4. Dez. 1907) aus Dattenhausen (Lkr. Illertissen) "
             "wegen Bedrohungdes Hauptlehrers Hörmann, der in Verdachtstand, er habe "
@@ -301,6 +301,15 @@ class TestParseProcessSegments(unittest.TestCase):
             "Hitlerbüste im Schulhaus vomFlügel an das Fenster gestellt nat.Eröffnung "
             "der Hauptverhandlung abgelehnt23. Jun. 1933 - 30. Okt. 1933(So E 34/33)"
         )
+        expected_output = [
+            ("Johann", "OHMEIER", "BVP-Mitglied aus Buch (Lkr.Illertissen)"),
+            ("Artur", "STEGMANN", "NSDAP-Stützpunktleiter"),
+            ("Jakob", "HABRES", "Vorstand des kath. Burschenvereins inBuch"),
+            ("Anton", "DOPFER", "NSDAPMitglied und Hilfspolizist"),
+            ("Karl", "BIBER", "aus Dattenhausen (Lkr. Illertissen)"),
+        ]
+        additional_person_data = get_additional_person_data(process_text)
+        self.assertEqual(expected_output, additional_person_data)
 
     def test_get_birthday_of_people_involved_in_process(self):
         process_text = (

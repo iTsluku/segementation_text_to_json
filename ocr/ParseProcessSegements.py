@@ -42,6 +42,13 @@ pattern_birthday_person = re.compile(
     r"(?:[A-ZÄÖÜ][a-zäöü-]+\s)+[A-ZÄÖÜ-]{3,}"
     r"\s?\(\s?\w{1,3}(?:\s|\.|,)?\s?(\d{1,2})(?:\s|\.|,)?\s?([JFMASOND][a-z]+)(?:\s|\.|,)?\s?(\d{4})\s?\)"
 )
+pattern_additional_person_data = re.compile(
+    r"(?:den|die)\s?(?:polnischen|polnische)?\s?(?:ldw.|kath.|kfm.|landw.)?\s?"
+    r"[A-ZÄÖÜ][a-zäöü-]+(?:\sund\s[A-ZÄÖÜ][a-zäöü-]+)?\s"
+    r"((?:(?:[A-ZÄÖÜ][a-zäöü-]+)+\s)+)([A-ZÄÖÜ-]{3,})"
+    r"\s?\(\s?\w{1,3}(?:\s|\.|,)?\s?\d{1,2}(?:\s|\.|,)?\s?[JFMASOND][a-z]+(?:\s|\.|,)?\s?\d{4}\s?\)"
+    r"[\s,;]\s?([\w\s+)(.-]+?)\s?[\s,;]\s?(?=den|die|wegen)"
+)
 
 
 def get_number_of_people_involved_in_process(paragraph_text: str) -> int:
@@ -78,3 +85,8 @@ def parse_birthday_tuples(birthdays: List[Tuple[str, str, str]]) -> List[str]:
 def get_birthday_of_people_involved_in_process(paragraph_text: str) -> List[str]:
     birthdays = pattern_birthday_person.findall(paragraph_text)
     return parse_birthday_tuples(birthdays)
+
+
+def get_additional_person_data(paragraph_text: str) -> List[Tuple[str, str, str]]:
+    additional_person_data = pattern_additional_person_data.findall(paragraph_text)
+    return [(x.strip(), y.strip(), z.strip()) for (x, y, z) in additional_person_data]
