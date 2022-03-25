@@ -183,7 +183,7 @@ def preprocess_paragraphs(paragraphs: List[str]) -> List[str]:
         preprocessed_paragraph = add_missing_whitespace_before_occupation(
             preprocessed_paragraph
         )
-        preprocess_paragraph = add_missing_whitespace_before_and_after_word_und(
+        preprocessed_paragraph = add_missing_whitespace_before_and_after_word_und(
             preprocessed_paragraph
         )
         preprocessed_paragraphs.append(preprocessed_paragraph)
