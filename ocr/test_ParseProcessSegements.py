@@ -1,6 +1,6 @@
 import unittest
 from ocr import ParseProcessSegements
-from ocr.ParseProcessSegements import get_additional_person_data
+from ocr.ParseProcessSegements import get_additional_person_data, ProcessCaseIdException
 
 
 class TestParseProcessSegments(unittest.TestCase):
@@ -347,3 +347,17 @@ class TestParseProcessSegments(unittest.TestCase):
             )
         )
         self.assertEqual(expected_occupations, occupations_output)
+
+    def test_get_process_id(self):
+        process_text = (
+            "Prozeß gegen den kfm. Angestellten Franz MAYER (geb. 24. Mrz. 1907) aus Münchenwegen Urkundenfälschung."
+            "Urteil: 10 Monate Gefängnis(33 267,268 StGB)3. Jan. 1941 - 30. Jun. 1944(5 KLs So 57/41)"
+        )
+        expected_verdict_paragraph = "5 KLs So 57/41"
+        try:
+            verdict_paragraph_output = ParseProcessSegements.get_process_case_id(
+                process_text
+            )
+            self.assertEqual(expected_verdict_paragraph, verdict_paragraph_output)
+        except ProcessCaseIdException as e:
+            self.fail(e.message)

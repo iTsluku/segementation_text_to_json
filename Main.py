@@ -9,6 +9,8 @@ from ocr.ParseProcessSegements import (
     get_occupation_of_people_involved_in_process,
     get_birthday_of_people_involved_in_process,
     get_additional_person_data,
+    get_process_case_id,
+    ProcessCaseIdException,
 )
 from ocr.PreprocessOcrOutput import (
     fix_first_last_name_no_whitespace,
@@ -27,14 +29,12 @@ parsed_process_n = 0
 invalid_document_name_n = 0
 invalid_id_paragraph_n = 0
 invalid_paragraph_segmentation_n = 0
-invalid_occupation_n = 0
-invalid_birthdate_n = 0
-invalid_person_name = 0
 valid_document_n = 0
 valid_process_n = 0
-additional_data_person_n = 0
 no_additional_data_person_n = 0
 processed_people = 0
+missing_process_case_id_n = 0
+invalid_process_checksum = 0
 
 
 class Error(Exception):
@@ -61,44 +61,8 @@ class ParagraphSegmentationException(Error):
     pass
 
 
-class ProcessNumberException(Error):
-    """Raised when the process number can't be parsed, related to process documents."""
-
-    pass
-
-
-class ProcedureNumberException(Error):
-    """Raised when the procedure number can't be parsed, related to proceedings discontinued by the courts."""
-
-    pass
-
-
-class PersonNameException(Error):
-    """Raised when the name of a person can't be parsed."""
-
-    pass
-
-
-class OccupationException(Error):
-    """Raised when the occupation can't be parsed."""
-
-    pass
-
-
-class BirthdateException(Error):
-    """Raised when the birthdate can't be parsed."""
-
-    pass
-
-
-class JudgmentException(Error):
-    """Raised when the judgment can't be parsed."""
-
-    pass
-
-
-class AttachmentsException(Error):
-    """Raised when the attachments can't be parsed."""
+class ExtractProcessDataException(Error):
+    """Raised when number of first names, last names or occupations don't add up"""
 
     pass
 
@@ -229,7 +193,7 @@ def preprocess_paragraphs(paragraphs: List[str]) -> List[str]:
 def parse_segment(
     paragraph_as_dict: dict, process_paragraph: str, file_path: str, file_name: str
 ) -> dict:
-    global valid_process_n, parsed_process_n, invalid_occupation_n, invalid_birthdate_n, invalid_person_name, additional_data_person_n, no_additional_data_person_n, processed_people
+    global invalid_process_checksum, valid_process_n, parsed_process_n, no_additional_data_person_n, processed_people
     p = process_paragraph
     d = paragraph_as_dict
     try:
@@ -245,24 +209,23 @@ def parse_segment(
         occupations_n = len(occupations)
         birthdays_n = len(birthdays)
 
-        if first_names_n != last_names_n:
+        if (
+            first_names_n != last_names_n
+            or last_names_n != occupations_n
+            or last_names_n != birthdays_n
+        ):
             # segment might address more people/names, but they don't have to be mandatory accused of sth
-            raise PersonNameException
-
-        if last_names_n != occupations_n:
-            raise OccupationException
-
-        if last_names_n != birthdays_n:
-            print("---")
-            print(f"{first_names=}")
-            print(f"{last_names=}")
-            print(f"{first_names_n}/{number_of_people}")
-            print(f"{last_names_n}/{number_of_people}")
-            print(zip(first_names, last_names))
-            print(birthdays)
-            print(p)
-            print("---")
-            raise BirthdateException
+            if False:
+                print("---")
+                print(f"{first_names=}")
+                print(f"{last_names=}")
+                print(f"{first_names_n}/{number_of_people}")
+                print(f"{last_names_n}/{number_of_people}")
+                print(zip(first_names, last_names))
+                print(birthdays)
+                print(p)
+                print("---")
+            raise ExtractProcessDataException
 
         d["Personen"] = [None] * last_names_n
 
@@ -277,33 +240,16 @@ def parse_segment(
             for p in additional_person_data:
                 if p[0] == first_name and p[1] == last_name:
                     d["Personen"][i]["Zusatz"] = p[2]
-                    additional_data_person_n += 1
                     break
-            # TODO
-            d["Personen"][i]["Urteil"] = "TODO"
+            # TODO Urteil,Anlagen
         for i in range(last_names_n):
             if "Zusatz" not in d["Personen"][i]:
                 d["Personen"][i]["Zusatz"] = None
                 no_additional_data_person_n += 1
         valid_process_n += 1
         processed_people += last_names_n
-    except OccupationException:
-        source = file_path
-        dest = os.path.join(cwd, "output/invalid_documents/occupation/" + file_name)
-        shutil.copyfile(source, dest)
-        invalid_occupation_n += 1
-        d = {}
-    except PersonNameException:
-        source = file_path
-        dest = os.path.join(cwd, "output/invalid_documents/person_name/" + file_name)
-        shutil.copyfile(source, dest)
-        invalid_person_name += 1
-        d = {}
-    except BirthdateException:
-        source = file_path
-        dest = os.path.join(cwd, "output/invalid_documents/birthdate/" + file_name)
-        shutil.copyfile(source, dest)
-        invalid_birthdate_n += 1
+    except ExtractProcessDataException:
+        invalid_process_checksum += 1
         d = {}
     finally:
         parsed_process_n += 1
@@ -311,7 +257,7 @@ def parse_segment(
 
 
 def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]:
-    global cwd, invalid_id_paragraph_n, valid_document_n, invalid_paragraph_segmentation_n, parsed_process_segements_n
+    global cwd, invalid_id_paragraph_n, valid_document_n, invalid_paragraph_segmentation_n, parsed_process_segements_n, missing_process_case_id_n
     """
     Return list with processes, empty list if document is invalid.
     Store invalid documents.
@@ -334,12 +280,19 @@ def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]
 
         for i, process_paragraph in enumerate(process_paragraphs):
             paragraph_as_dict = {
-                "Id_Archiv_Alt": old_ids[i],
-                "Id_Archiv_Neu": new_ids[i],
-                "Id_Seite": id,
+                "ID_Archiv_Alt": old_ids[i],
+                "ID_Archiv_Neu": new_ids[i],
+                "ID_Seite": id,
+                "ID_Prozess": None,
                 "Text": process_paragraph,
-                "Prozessnummer": "TODO",
             }
+            try:
+                paragraph_as_dict["ID_Prozess"] = get_process_case_id(process_paragraph)
+            except ProcessCaseIdException:
+                if True:
+                    print("\n", process_paragraph)  # process_paragraph[-40:]
+                missing_process_case_id_n += 1
+
             paragraph_as_dict = parse_segment(
                 paragraph_as_dict, process_paragraph, file_path, file_name
             )
@@ -351,61 +304,23 @@ def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]
         valid_document_n += 1
 
     except InvalidIdParagraph:
-        source = file_path
-        dest = os.path.join(cwd, "output/invalid_documents/id_paragraph/" + file_name)
-        shutil.copyfile(source, dest)
         invalid_id_paragraph_n += 1
     except ParagraphSegmentationException:
-        source = file_path
-        dest = os.path.join(
-            cwd, "output/invalid_documents/paragraph_segmentation/" + file_name
-        )
-        shutil.copyfile(source, dest)
         invalid_paragraph_segmentation_n += 1
-
     return l
 
 
 def exec_app():
-    global parsed_documents_n, invalid_document_name_n, invalid_id_paragraph_n, valid_document_n, invalid_occupation_n, invalid_paragraph_segmentation_n, invalid_birthdate_n, invalid_person_name, parsed_process_n, valid_process_n, additional_data_person_n, no_additional_data_person_n, processed_people
+    global invalid_process_checksum, missing_process_case_id_n, parsed_documents_n, invalid_document_name_n, invalid_id_paragraph_n, valid_document_n, invalid_paragraph_segmentation_n, parsed_process_n, valid_process_n, no_additional_data_person_n, processed_people
     d = {}
     d["Statistiken"] = {}
     d["Statistiken"]["Allgemein"] = {}
     d["Statistiken"]["Info_Ungültige_Dokumente"] = {}
-    d["Statistiken"]["Info_Ungültige_Prozesse"] = {}
     d["Dokumente"] = {}
 
     cwd = os.getcwd()
     path_txt = os.path.join(cwd, "text")
     Path(os.path.join(cwd, "output")).mkdir(parents=True, exist_ok=True)
-    path_invalid_docs = os.path.join(cwd, "output/invalid_documents")
-    path_invalid_document_name = os.path.join(path_invalid_docs, "document_name")
-    path_invalid_id_paragraph = os.path.join(path_invalid_docs, "id_paragraph")
-    path_invalid_paragraph_segmentation = os.path.join(
-        path_invalid_docs, "paragraph_segmentation"
-    )
-    path_invalid_occupation = os.path.join(path_invalid_docs, "occupation")
-    path_invalid_person_name = os.path.join(path_invalid_docs, "person_name")
-    path_invalid_birthdate = os.path.join(path_invalid_docs, "birthdate")
-
-    try:
-        Path(path_invalid_docs).mkdir(parents=True, exist_ok=False)
-    except FileExistsError:
-        # rm /output/invalid_documents and create a new dir
-        shutil.rmtree(path_invalid_docs, ignore_errors=True)
-        shutil.rmtree(path_invalid_document_name, ignore_errors=True)
-        shutil.rmtree(path_invalid_id_paragraph, ignore_errors=True)
-        shutil.rmtree(path_invalid_paragraph_segmentation, ignore_errors=True)
-        shutil.rmtree(path_invalid_occupation, ignore_errors=True)
-        shutil.rmtree(path_invalid_person_name, ignore_errors=True)
-        shutil.rmtree(path_invalid_birthdate, ignore_errors=True)
-        Path(path_invalid_docs).mkdir(parents=True, exist_ok=True)
-        Path(path_invalid_document_name).mkdir(parents=True, exist_ok=True)
-        Path(path_invalid_id_paragraph).mkdir(parents=True, exist_ok=True)
-        Path(path_invalid_paragraph_segmentation).mkdir(parents=True, exist_ok=True)
-        Path(path_invalid_occupation).mkdir(parents=True, exist_ok=True)
-        Path(path_invalid_person_name).mkdir(parents=True, exist_ok=True)
-        Path(path_invalid_birthdate).mkdir(parents=True, exist_ok=True)
     process_types = []
 
     for path, dir, files in os.walk(path_txt):
@@ -448,9 +363,6 @@ def exec_app():
                 p_d_list = text_segmentation_alg(os.path.join(path, f), f, str(id))
                 for p_d in p_d_list:
                     d["Dokumente"][t].append(p_d)
-                # break  # TODO rm debug help
-            # break  # TODO rm debug help
-        # break  # TODO rm debug help
 
     # Add stats
     d["Statistiken"]["Allgemein"]["Gültige_Dokumente_Gesamt"] = valid_document_n
@@ -477,9 +389,13 @@ def exec_app():
     d["Statistiken"]["Allgemein"]["Unültige_Prozesse"] = (
         parsed_process_n - valid_process_n
     )
+    d["Statistiken"]["Allgemein"][
+        "Unültige_Prozesse_Prüfsumme"
+    ] = invalid_process_checksum
     d["Statistiken"]["Allgemein"]["Anteil_Gültige_Prozesse"] = round(
         valid_process_n / parsed_process_n, 4
     )
+    d["Statistiken"]["Allgemein"]["Anzahl_Personen"] = processed_people
 
     # Add "invalid documents info"
     d["Statistiken"]["Info_Ungültige_Dokumente"][
@@ -489,18 +405,15 @@ def exec_app():
     d["Statistiken"]["Info_Ungültige_Dokumente"][
         "Process_Segmentierung"
     ] = invalid_paragraph_segmentation_n
-    d["Statistiken"]["Info_Ungültige_Prozesse"]["Beruf"] = invalid_occupation_n
-    d["Statistiken"]["Info_Ungültige_Prozesse"]["Personen_Name"] = invalid_person_name
-    d["Statistiken"]["Info_Ungültige_Prozesse"]["Geburtsdatum"] = invalid_birthdate_n
-    d["Statistiken"]["Info_Ungültige_Prozesse"]["Prozessnummer"] = "TODO"
-    d["Statistiken"]["Info_Ungültige_Prozesse"]["Verfahrensnummer"] = "TODO"
-    d["Statistiken"]["Info_Ungültige_Prozesse"]["Urteil"] = "TODO"
-    d["Statistiken"]["Info_Ungültige_Prozesse"]["Anlagen"] = "TODO"
-    d["Statistiken"]["Info_Zusätzliche_Daten_Person"] = additional_data_person_n
-    d["Statistiken"][
-        "Info_Keine_Zusätzliche_Daten_Person"
-    ] = no_additional_data_person_n
-    d["Statistiken"]["Info_Verarbeitete_Personen"] = processed_people
+
+    # data about missing values for given entries
+    d["Statistiken"]["Info_None"] = {}
+    d["Statistiken"]["Info_None"][
+        "Prozess_ID"
+    ] = f"{missing_process_case_id_n} ({round((missing_process_case_id_n/valid_process_n)*100,2)} %)"
+    d["Statistiken"]["Info_None"][
+        "Zusatz"
+    ] = f"{no_additional_data_person_n} ({round((no_additional_data_person_n/processed_people)*100,2)} %)"
 
     with open(
         os.path.join(cwd, "output/output.json"), mode="w", encoding="utf-8"
