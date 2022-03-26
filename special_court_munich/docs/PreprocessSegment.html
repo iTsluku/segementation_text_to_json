@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module PreprocessSegment</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>PreprocessSegment</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/andreas/dh/segmentation_text_to_json/special_court_munich/PreprocessSegment.py">/home/andreas/dh/segmentation_text_to_json/special_court_munich/PreprocessSegment.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="re.html">re</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="builtins.html#object">builtins.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="PreprocessSegment.html#GroupingIndex">GroupingIndex</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="GroupingIndex">class <strong>GroupingIndex</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#GroupingIndex">GroupingIndex</a>(items,&nbsp;start_index=0)<br>
+&nbsp;<br>
+<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="GroupingIndex-__call__"><strong>__call__</strong></a>(self, match)</dt><dd><tt>Call&nbsp;self&nbsp;as&nbsp;a&nbsp;function.</tt></dd></dl>
+
+<dl><dt><a name="GroupingIndex-__init__"><strong>__init__</strong></a>(self, items, start_index=0)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-add_missing_whitespace_before_and_after_word_und"><strong>add_missing_whitespace_before_and_after_word_und</strong></a>(process_text: str) -&gt; str</dt><dd><tt>Add&nbsp;the&nbsp;missing&nbsp;space&nbsp;before&nbsp;and&nbsp;after&nbsp;the&nbsp;keyword&nbsp;"and"&nbsp;within&nbsp;the&nbsp;segment&nbsp;for&nbsp;the&nbsp;occurrence&nbsp;of&nbsp;2&nbsp;professions.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;process_text&nbsp;(str):&nbsp;Process&nbsp;text&nbsp;segment.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;str:&nbsp;Revised&nbsp;version&nbsp;of&nbsp;the&nbsp;process&nbsp;text&nbsp;segment.</tt></dd></dl>
+ <dl><dt><a name="-add_missing_whitespace_before_occupation"><strong>add_missing_whitespace_before_occupation</strong></a>(process_text: str) -&gt; str</dt><dd><tt>Add&nbsp;missing&nbsp;whitespace&nbsp;after&nbsp;keywords&nbsp;["den","die"]&nbsp;-&nbsp;before&nbsp;occupation.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;process_text&nbsp;(str):&nbsp;Process&nbsp;text&nbsp;segment.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;str:&nbsp;Revised&nbsp;version&nbsp;of&nbsp;the&nbsp;process&nbsp;text&nbsp;segment.</tt></dd></dl>
+ <dl><dt><a name="-fix_first_last_name_no_whitespace"><strong>fix_first_last_name_no_whitespace</strong></a>(process_text: str) -&gt; str</dt><dd><tt>Add&nbsp;missing&nbsp;whitespace&nbsp;between&nbsp;first&nbsp;and&nbsp;last&nbsp;name.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;process_text&nbsp;(str):&nbsp;Process&nbsp;text&nbsp;segment.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;str:&nbsp;Revised&nbsp;version&nbsp;of&nbsp;the&nbsp;process&nbsp;text&nbsp;segment.</tt></dd></dl>
+ <dl><dt><a name="-split_words_with_multiple_capital_characters_before_occupation"><strong>split_words_with_multiple_capital_characters_before_occupation</strong></a>(process_text: str) -&gt; str</dt><dd><tt>Add&nbsp;missing&nbsp;whitespace&nbsp;before&nbsp;occupation.<br>
+&nbsp;<br>
+Parameters:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;process_text&nbsp;(str):&nbsp;Process&nbsp;text&nbsp;segment.<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;str:&nbsp;Revised&nbsp;version&nbsp;of&nbsp;the&nbsp;process&nbsp;text&nbsp;segment.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>pattern_first_second_name_no_whitespace</strong> = re.compile('([A-ZÄÖÜ][a-zäöü]+)([A-ZÄÖÜ-]{3,})(?=[\\s(,])')<br>
+<strong>pattern_first_second_name_no_whitespace_together</strong> = re.compile('([A-ZÄÖÜ][a-zäöü]+[A-ZÄÖÜ-]{3,})(?=[\\s(,])')<br>
+<strong>pattern_occupation_and_word_und_missing_whitespace</strong> = re.compile('(?:den|die)\\s?(?:polnischen|polnisc...A-ZÄÖÜ][a-zäöü-]+)|(?:[A-ZÄÖÜ][a-zäöü-]+und[A-ZÄ)<br>
+<strong>pattern_occupation_prefix_missing_whitespace</strong> = re.compile('^(?:den|die)[A-ZÄÖÜ-][a-zäöü-]+$')<br>
+<strong>pattern_pre_occupation_no_whitespace_separated</strong> = re.compile('([A-ZÄÖÜ-][a-zäöü-]+)([A-ZÄÖÜ-][a-zäöü-]+)(?=\\s[A-ZÄÖÜ-]{3,})')<br>
+<strong>pattern_pre_occupation_no_whitespace_together</strong> = re.compile('([A-ZÄÖÜ-][a-zäöü-]+[A-ZÄÖÜ-][a-zäöü-]+)(?=\\s[A-ZÄÖÜ-]{3,})')</td></tr></table>
+</body></html>
