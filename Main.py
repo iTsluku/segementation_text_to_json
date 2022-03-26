@@ -219,10 +219,10 @@ def parse_segment(
             for p in additional_person_data:
                 if p[0] == first_name and p[1] == last_name:
                     d["Personen"][i]["Zusatz"] = p[2]
-                    corpus_stats.inc_val_person_add_data()
+                    corpus_stats.inc_val_people_add_data()
                     break
             # TODO Urteil,Anlagen
-        corpus_stats.inc_val_valid_process()
+        corpus_stats.inc_val_valid_processes()
     except ExtractProcessDataException:
         d = {}
     finally:
@@ -272,7 +272,7 @@ def text_segmentation_alg(file_path: str, file_name: str, id: str) -> List[dict]
             if paragraph_as_dict:
                 process_paragraphs_dict_list.append(paragraph_as_dict)
                 if paragraph_as_dict["ID_Prozess"]:
-                    corpus_stats.inc_val_valid_process_id()
+                    corpus_stats.inc_val_valid_process_ids()
 
         # end of "parser" -> no exception raised
         corpus_stats.inc_val_valid_docs()
