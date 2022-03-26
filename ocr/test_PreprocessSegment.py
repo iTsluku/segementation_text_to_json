@@ -1,5 +1,5 @@
 import unittest
-from ocr import PreprocessOcrOutput
+from ocr import PreprocessSegment
 
 
 class TestPreprocessOcrOutput(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestPreprocessOcrOutput(unittest.TestCase):
             "Angestellten Fritz WÜNSCHE (geb. 10. Jan. 1906) aus München wegen Verbreitung "
             "kommu-nistischer Druckschriften. "
         )
-        preprocessed_ocr_output = PreprocessOcrOutput.fix_first_last_name_no_whitespace(
+        preprocessed_ocr_output = PreprocessSegment.fix_first_last_name_no_whitespace(
             ocr_output
         )
         self.assertEqual(expected_result, preprocessed_ocr_output)
@@ -30,7 +30,7 @@ class TestPreprocessOcrOutput(unittest.TestCase):
             "früher SPD-Mitglied, wegen Außerungen uber Hitier.Urteil: 2 Jahre 4 Monate Gefängnis"
             "($ 2 HG)6. Okt. 1940 - 19. Feb. 1943(1 KMs So 11/41)"
         )
-        preprocessed_ocr_output = PreprocessOcrOutput.split_words_with_multiple_capital_characters_before_occupation(
+        preprocessed_ocr_output = PreprocessSegment.split_words_with_multiple_capital_characters_before_occupation(
             ocr_output
         )
         self.assertEqual(expected_result, preprocessed_ocr_output)
@@ -55,7 +55,7 @@ class TestPreprocessOcrOutput(unittest.TestCase):
             "Bader Freispruch(885 5,6,9 JGG; 88 43,242-245 StGB)29. Nov. 1940 - 16. Jun. 1944(4 KLs So 14/41)"
         )
         preprocessed_ocr_output = (
-            PreprocessOcrOutput.add_missing_whitespace_before_occupation(ocr_output)
+            PreprocessSegment.add_missing_whitespace_before_occupation(ocr_output)
         )
         self.assertEqual(expected_result, preprocessed_ocr_output)
 
@@ -63,7 +63,7 @@ class TestPreprocessOcrOutput(unittest.TestCase):
         ocr_output = "den Metzgerund Gastwirt Xaver SCHMATZ (geb. 17. Feb.1867)"
         expected_result = "den Metzger und Gastwirt Xaver SCHMATZ (geb. 17. Feb.1867)"
         preprocessed_ocr_output = (
-            PreprocessOcrOutput.add_missing_whitespace_before_and_after_word_und(
+            PreprocessSegment.add_missing_whitespace_before_and_after_word_und(
                 ocr_output
             )
         )
@@ -73,7 +73,7 @@ class TestPreprocessOcrOutput(unittest.TestCase):
         ocr_output = "den Metzger undGastwirt Xaver SCHMATZ (geb. 17. Feb.1867)"
         expected_result = "den Metzger und Gastwirt Xaver SCHMATZ (geb. 17. Feb.1867)"
         preprocessed_ocr_output = (
-            PreprocessOcrOutput.add_missing_whitespace_before_and_after_word_und(
+            PreprocessSegment.add_missing_whitespace_before_and_after_word_und(
                 ocr_output
             )
         )
@@ -83,7 +83,7 @@ class TestPreprocessOcrOutput(unittest.TestCase):
         ocr_output = "den MetzgerundGastwirt Xaver SCHMATZ (geb. 17. Feb.1867)"
         expected_result = "den Metzger und Gastwirt Xaver SCHMATZ (geb. 17. Feb.1867)"
         preprocessed_ocr_output = (
-            PreprocessOcrOutput.add_missing_whitespace_before_and_after_word_und(
+            PreprocessSegment.add_missing_whitespace_before_and_after_word_und(
                 ocr_output
             )
         )
@@ -98,7 +98,7 @@ class TestPreprocessOcrOutput(unittest.TestCase):
         )
         wrong_result = "den Metzger und Gastwirt Xaver SCHMATZ (geb. 17. Feb.1867) Blabla und Blabla"
         preprocessed_ocr_output = (
-            PreprocessOcrOutput.add_missing_whitespace_before_and_after_word_und(
+            PreprocessSegment.add_missing_whitespace_before_and_after_word_und(
                 ocr_output
             )
         )
