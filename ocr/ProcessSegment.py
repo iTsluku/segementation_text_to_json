@@ -30,6 +30,8 @@ class Error(Exception):
 
 
 class ProcessCaseIdException(Error):
+    """Raised when the case id of the given process doesn't exist or can't be extracted."""
+
     def __init__(
         self,
         message="Raised when the case id of the given process doesn't exist or can't be extracted.",
@@ -69,26 +71,65 @@ pattern_additional_person_data = re.compile(
 pattern_process_case_id = re.compile(r"\(([?:<>$,;\w\d\s/-]+)\)?\s?[‘.,;|]?$")
 
 
-def get_number_of_people_involved_in_process(paragraph_text: str) -> int:
-    person_groupings = pattern_person.findall(paragraph_text)
+def get_number_of_people_involved_in_process(process_text: str) -> int:
+    """Extract number of convicted persons mentioned in the paragraph segment.
+
+    Parameters:
+        process_text (str): Process text segment.
+
+    Returns:
+        int: Number of convicted persons.
+    """
+    person_groupings = pattern_person.findall(process_text)
     return len(person_groupings)
 
 
-def get_first_name_of_people_involved_in_process(paragraph_text: str) -> List[str]:
+def get_first_name_of_people_involved_in_process(process_text: str) -> List[str]:
+    """Extract first names of people mentioned in the paragraph segment.
+
+    Parameters:
+        process_text (str): Process text segment.
+
+    Returns:
+        List[str]: List of first names.
+    """
     # remove ending whitespace
-    return [x.rstrip() for x in pattern_first_name_person.findall(paragraph_text)]
+    return [x.rstrip() for x in pattern_first_name_person.findall(process_text)]
 
 
-def get_last_name_of_people_involved_in_process(paragraph_text: str) -> List[str]:
-    return pattern_last_name_person.findall(paragraph_text)
+def get_last_name_of_people_involved_in_process(process_text: str) -> List[str]:
+    """Extract last names of people mentioned in the paragraph segment.
+
+    Parameters:
+        process_text (str): Process text segment.
+
+    Returns:
+        List[str]: List of last names.
+    """
+    return pattern_last_name_person.findall(process_text)
 
 
-def get_occupation_of_people_involved_in_process(paragraph_text: str) -> List[str]:
-    return pattern_occupation_person.findall(paragraph_text)
+def get_occupation_of_people_involved_in_process(process_text: str) -> List[str]:
+    """Extract occupations of people mentioned in the paragraph segment.
+
+    Parameters:
+        process_text (str): Process text segment.
+
+    Returns:
+        List[str]: List of occupations.
+    """
+    return pattern_occupation_person.findall(process_text)
 
 
 def parse_birthday_tuples(birthdays: List[Tuple[str, str, str]]) -> List[str]:
-    # YYYY-MM-DD
+    """Format birthdays.
+
+    Parameters:
+        birthdays (List[Tuple[str, str, str]]): List of birthdays.
+
+    Returns:
+        List[str]: List of YYYY-MM-DD formatted birthdays.
+    """
     formatted_birthdays = []
     for t in birthdays:
         if len(t[0]) == 1:
@@ -100,25 +141,45 @@ def parse_birthday_tuples(birthdays: List[Tuple[str, str, str]]) -> List[str]:
     return formatted_birthdays
 
 
-def get_birthday_of_people_involved_in_process(paragraph_text: str) -> List[str]:
-    birthdays = pattern_birthday_person.findall(paragraph_text)
+def get_birthday_of_people_involved_in_process(process_text: str) -> List[str]:
+    """Extract birthdays of people mentioned in the paragraph segment.
+
+    Parameters:
+        process_text (str): Process text segment.
+
+    Returns:
+        List[str]: List of formatted birthdays.
+    """
+    birthdays = pattern_birthday_person.findall(process_text)
     return parse_birthday_tuples(birthdays)
 
 
-def get_additional_person_data(paragraph_text: str) -> List[Tuple[str, str, str]]:
-    additional_person_data = pattern_additional_person_data.findall(paragraph_text)
+def get_additional_person_data(process_text: str) -> List[Tuple[str, str, str]]:
+    """Extract additional data on persons mentioned in the paragraph segment.
+
+    Parameters:
+        process_text (str): Process text segment.
+
+    Returns:
+        List[Tuple[str, str, str]]: List of people by first name, last name and additional data.
+    """
+    additional_person_data = pattern_additional_person_data.findall(process_text)
     return [(x.strip(), y.strip(), z.strip()) for (x, y, z) in additional_person_data]
 
 
-def get_process_case_id(paragraph_text: str) -> str:
+def get_process_case_id(process_text: str) -> str:
     """Extract process id out of paragraph segment.
+
+    Parameters:
+        process_text (str): Process text segment.
 
     Returns:
         str: process id.
+
     Raises:
         ProcessIdException - Raised when the process id can't be extracted.
     """
-    process_id = pattern_process_case_id.findall(paragraph_text)
+    process_id = pattern_process_case_id.findall(process_text)
     if process_id:
         return process_id[0]
     else:

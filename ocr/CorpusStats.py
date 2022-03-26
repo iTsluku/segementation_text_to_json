@@ -1,11 +1,16 @@
 class CorpusStats:
+    """Values for quantifying data extraction success."""
+
     @staticmethod
     def inc_val(x: int) -> int:
-        """Returns the incremented value of a given integer."""
+        """Incremented the value of the given integer by one.
+
+        Returns:
+            int: incremented value of the given integer.
+        """
         return x + 1
 
     def __init__(self):
-        """Values for quantifying data extraction success."""
         self.parsed_docs = 0
         self.valid_docs = 0
         self.parsed_docs_repr = ""
@@ -22,7 +27,7 @@ class CorpusStats:
         if self.parsed_docs > 0:
             self.parsed_docs_repr = (
                 f"valid docs: {self.valid_docs}/{self.parsed_docs} "
-                f"({round((self.valid_docs/self.parsed_docs)*100,2)}%)"
+                f"({round((self.valid_docs / self.parsed_docs) * 100, 2)}%)"
             )
         if self.parsed_processes > 0:
             self.parsed_processes_repr = (

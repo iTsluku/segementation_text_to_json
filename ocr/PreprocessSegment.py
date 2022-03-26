@@ -6,8 +6,12 @@ pattern_first_second_name_no_whitespace = re.compile(
 pattern_first_second_name_no_whitespace_together = re.compile(
     r"([A-ZÄÖÜ][a-zäöü]+[A-ZÄÖÜ-]{3,})(?=[\s(,])"
 )
-a_b_sep = re.compile(r"([A-ZÄÖÜ-][a-zäöü-]+)([A-ZÄÖÜ-][a-zäöü-]+)(?=\s[A-ZÄÖÜ-]{3,})")
-a_and_b = re.compile(r"([A-ZÄÖÜ-][a-zäöü-]+[A-ZÄÖÜ-][a-zäöü-]+)(?=\s[A-ZÄÖÜ-]{3,})")
+pattern_pre_occupation_no_whitespace_separated = re.compile(
+    r"([A-ZÄÖÜ-][a-zäöü-]+)([A-ZÄÖÜ-][a-zäöü-]+)(?=\s[A-ZÄÖÜ-]{3,})"
+)
+pattern_pre_occupation_no_whitespace_together = re.compile(
+    r"([A-ZÄÖÜ-][a-zäöü-]+[A-ZÄÖÜ-][a-zäöü-]+)(?=\s[A-ZÄÖÜ-]{3,})"
+)
 
 pattern_occupation_prefix_missing_whitespace = re.compile(
     r"^(?:den|die)[A-ZÄÖÜ-][a-zäöü-]+$"
@@ -31,6 +35,14 @@ class GroupingIndex(object):
 
 
 def fix_first_last_name_no_whitespace(process_text: str) -> str:
+    """Add missing whitespace between first and last name.
+
+    Parameters:
+        process_text (str): Process text segment.
+
+    Returns:
+        str: Revised version of the process text segment.
+    """
     name_groupings = pattern_first_second_name_no_whitespace.findall(process_text)
     replacements = [f"{x} {y}" for (x, y) in name_groupings]
     output = process_text
@@ -44,10 +56,20 @@ def fix_first_last_name_no_whitespace(process_text: str) -> str:
 def split_words_with_multiple_capital_characters_before_occupation(
     process_text: str,
 ) -> str:
-    name_groupings = a_b_sep.findall(process_text)
+    """Add missing whitespace before occupation.
+
+    Parameters:
+        process_text (str): Process text segment.
+
+    Returns:
+        str: Revised version of the process text segment.
+    """
+    name_groupings = pattern_pre_occupation_no_whitespace_separated.findall(
+        process_text
+    )
     replacements = [f"{x} {y}" for (x, y) in name_groupings]
     output = process_text
-    output = a_and_b.sub(
+    output = pattern_pre_occupation_no_whitespace_together.sub(
         GroupingIndex(replacements),
         output,
     )
@@ -55,6 +77,14 @@ def split_words_with_multiple_capital_characters_before_occupation(
 
 
 def add_missing_whitespace_before_occupation(process_text: str) -> str:
+    """Add missing whitespace after keywords ["den","die"] - before occupation.
+
+    Parameters:
+        process_text (str): Process text segment.
+
+    Returns:
+        str: Revised version of the process text segment.
+    """
     processed_words = []
     for word in process_text.split():
         p = pattern_occupation_prefix_missing_whitespace.match(word)
@@ -66,6 +96,14 @@ def add_missing_whitespace_before_occupation(process_text: str) -> str:
 
 
 def add_missing_whitespace_before_and_after_word_und(process_text: str) -> str:
+    """Add the missing space before and after the keyword "and" within the segment for the occurrence of 2 professions.
+
+    Parameters:
+        process_text (str): Process text segment.
+
+    Returns:
+        str: Revised version of the process text segment.
+    """
     processed_words = []
     missing_whitespace_cases = (
         pattern_occupation_and_word_und_missing_whitespace.findall(process_text)
