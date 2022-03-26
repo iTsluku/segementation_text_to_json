@@ -1,5 +1,5 @@
 import unittest
-from ocr import ProcessSegment
+from special_court_munich import ProcessSegment
 
 
 class TestParseProcessSegments(unittest.TestCase):

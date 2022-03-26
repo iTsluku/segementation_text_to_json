@@ -1,12 +1,12 @@
 import os
 import json
 
-from ocr import PreprocessSegment
-from ocr import ProcessSegment
+from special_court_munich import PreprocessSegment
+from special_court_munich import ProcessSegment
 from pathlib import Path
 from typing import List
 
-from ocr.CorpusStats import CorpusStats
+from special_court_munich.CorpusStats import CorpusStats
 
 cwd = os.getcwd()
 corpus_stats = CorpusStats()

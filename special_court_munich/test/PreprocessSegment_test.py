@@ -1,5 +1,5 @@
 import unittest
-from ocr import PreprocessSegment
+from special_court_munich import PreprocessSegment
 
 
 class TestPreprocessOcrOutput(unittest.TestCase):
