@@ -132,31 +132,6 @@ def add_missing_whitespace_before_and_after_word_und(process_text: str) -> str:
     return " ".join(processed_words)
 
 
-def remove_linebreak_hyphen(line: str) -> str:
-    """Remove hyphen if it is followed by a line break, when line processing a document.
-
-    Parameters:
-        line (str): Line of a document.
-
-    Returns:
-        str: Revised version of the text segment.
-    """
-    o = ""
-    prev = ""
-
-    for c in line:
-        if c == "\n" and prev == "-":
-            prev = ""
-        elif c == "\n":
-            o += prev
-            prev = ""
-        else:
-            o += prev
-            prev = c
-    o += prev
-    return o
-
-
 def preprocess_processes(processes: List[str]) -> List[str]:
     """Apply a pipeline of preprocessing functions to given processes.
 
