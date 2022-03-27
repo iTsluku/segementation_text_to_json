@@ -22,6 +22,22 @@ class CorpusStats:
         self.people_add_data = 0
         self.parsed_people_repr = ""
 
+    def has_been_inc(self) -> bool:
+        """Check if at least one instance attribute has been incremented.
+
+        Returns:
+            bool: True, iff at least one instance attribute has been incremented.
+        """
+        return (
+            self.parsed_docs != 0
+            or self.valid_docs != 0
+            or self.parsed_processes != 0
+            or self.valid_processes != 0
+            or self.valid_process_ids != 0
+            or self.people != 0
+            or self.people_add_data != 0
+        )
+
     def update_repr_calculations(self) -> None:
         """Updates the representation strings."""
         if self.parsed_docs > 0:
@@ -59,7 +75,7 @@ class CorpusStats:
         """Increment the number of valid documents."""
         self.valid_docs = CorpusStats.inc_val(self.valid_docs)
 
-    def inc_parsed_processes(self) -> None:
+    def inc_val_parsed_processes(self) -> None:
         """Increment the number of parsed processes."""
         self.parsed_processes = CorpusStats.inc_val(self.parsed_processes)
 

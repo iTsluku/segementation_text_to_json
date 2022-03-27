@@ -1,5 +1,7 @@
 import re
 
+from typing import List
+
 pattern_first_second_name_no_whitespace = re.compile(
     r"([A-ZÄÖÜ][a-zäöü]+)([A-ZÄÖÜ-]{3,})(?=[\s(,])"
 )
@@ -128,3 +130,58 @@ def add_missing_whitespace_before_and_after_word_und(process_text: str) -> str:
         else:
             processed_words.append(word)
     return " ".join(processed_words)
+
+
+def remove_linebreak_hyphen(line: str) -> str:
+    """Remove hyphen if it is followed by a line break, when line processing a document.
+
+    Parameters:
+        line (str): Line of a document.
+
+    Returns:
+        str: Revised version of the text segment.
+    """
+    o = ""
+    prev = ""
+
+    for c in line:
+        if c == "\n" and prev == "-":
+            prev = ""
+        elif c == "\n":
+            o += prev
+            prev = ""
+        else:
+            o += prev
+            prev = c
+    o += prev
+    return o
+
+
+def preprocess_processes(processes: List[str]) -> List[str]:
+    """Apply a pipeline of preprocessing functions to given processes.
+
+    Parameters:
+        processes (List[str]): List of process text segments.
+
+    Returns:
+        List[str]: Revised text version of processes.
+    """
+    preprocessed_processes = []
+    for process_text in processes:
+        preprocessed_process_text = process_text
+        preprocessed_process_text = fix_first_last_name_no_whitespace(
+            preprocessed_process_text
+        )
+        preprocessed_process_text = (
+            split_words_with_multiple_capital_characters_before_occupation(
+                preprocessed_process_text
+            )
+        )
+        preprocessed_process_text = add_missing_whitespace_before_occupation(
+            preprocessed_process_text
+        )
+        preprocessed_process_text = add_missing_whitespace_before_and_after_word_und(
+            preprocessed_process_text
+        )
+        preprocessed_processes.append(preprocessed_process_text)
+    return preprocessed_processes
