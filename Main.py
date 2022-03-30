@@ -79,8 +79,8 @@ def main():
     Path(os.path.join(cwd, "output")).mkdir(parents=True, exist_ok=True)
     process_types = []
 
-    for path, dir, files in os.walk(path_txt):
-        process_types = dir
+    for path, _dir, files in os.walk(path_txt):
+        process_types = _dir
         break
 
     # [('/home/andreas/dh/text_to_json/text/Eingestellte_Verfahren', 'Eingestellte_Verfahren'), ...]

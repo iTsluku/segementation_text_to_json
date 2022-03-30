@@ -20,8 +20,8 @@ pattern_occupation_prefix_missing_whitespace = re.compile(
 )
 pattern_occupation_and_word_und_missing_whitespace = re.compile(
     r"(?:den|die)\s?(?:polnischen|polnische)?\s?(?:ldw.|kath.|kfm.|landw.)?\s?"
-    r"((?:[A-ZÄÖÜ][a-zäöü-]+und\s[A-ZÄÖÜ][a-zäöü-]+)|(?:[A-ZÄÖÜ][a-zäöü-]+\sund[A-ZÄÖÜ][a-zäöü-]+)|"
-    r"(?:[A-ZÄÖÜ][a-zäöü-]+und[A-ZÄÖÜ][a-zäöü-]+))\s"
+    r"([A-ZÄÖÜ][a-zäöü-]+und\s[A-ZÄÖÜ][a-zäöü-]+|[A-ZÄÖÜ][a-zäöü-]+\sund[A-ZÄÖÜ][a-zäöü-]+|"
+    r"[A-ZÄÖÜ][a-zäöü-]+und[A-ZÄÖÜ][a-zäöü-]+)\s"
     r"(?:(?:[A-ZÄÖÜ][a-zäöü-]+)+\s)+[A-ZÄÖÜ-]{3,}(?=[\s(,])"
 )
 
