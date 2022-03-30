@@ -12,8 +12,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
+      - name: Check reo code
+        uses: actions/checkout@v3
+      - name: Install pytest
+        run: |
+          echo Install pytest...
+          pip install -U pytest
+          echo done.
       - name: Run tests
         run: |
           echo Run tests...
