@@ -12,3 +12,8 @@ class TestCorpusStats(unittest.TestCase):
             self.assertEqual(expected_output_values[i], v)
             self.assertTrue(v > input_values[i])
             self.assertEqual(input_values[i], v - 1)
+
+    def test_fail(self):
+        # TODO rm later
+        # test pipeline pytest failure
+        self.fail("pipeline failure test")
