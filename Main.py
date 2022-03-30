@@ -4,10 +4,10 @@ import json
 from pathlib import Path
 from typing import List
 
-from special_court_munich import ProcessDocument
-from special_court_munich import PreprocessSegment
-from special_court_munich import ProcessSegment
-from special_court_munich.CorpusStats import CorpusStats
+from special_court_munich import process_document
+from special_court_munich import preprocess_segment
+from special_court_munich import process_segment
+from special_court_munich.corpus import CorpusStats
 
 
 class InvalidDocumentName(Exception):
@@ -40,22 +40,22 @@ def text_segmentation_alg(file_path: str, document_id: str) -> List[dict]:
     """
     process_paragraphs_dict_list = []
     try:
-        old_ids = ProcessDocument.get_old_ids(file_path)
-        new_ids = ProcessDocument.get_new_ids(file_path)
+        old_ids = process_document.get_old_ids(file_path)
+        new_ids = process_document.get_new_ids(file_path)
 
         if len(old_ids) == 0 or len(new_ids) == 0 or len(old_ids) != len(new_ids):
             raise InvalidIdParagraph
 
-        process_paragraphs = ProcessDocument.parse_process_paragraphs(
+        process_paragraphs = process_document.parse_process_paragraphs(
             file_path, len(old_ids)
         )
-        process_paragraphs = PreprocessSegment.preprocess_processes(process_paragraphs)
+        process_paragraphs = preprocess_segment.preprocess_processes(process_paragraphs)
 
         if len(process_paragraphs) != len(old_ids):
             raise ParagraphSegmentationException
 
         for i, process_paragraph in enumerate(process_paragraphs):
-            paragraph_as_dict, corpus_stats = ProcessSegment.parse_process_segment(
+            paragraph_as_dict, corpus_stats = process_segment.parse_process_segment(
                 old_ids[i], new_ids[i], document_id, process_paragraph
             )
             # check if dict is empty --exception was raised while parsing segments for the given paragraph

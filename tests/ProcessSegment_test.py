@@ -1,5 +1,5 @@
 import unittest
-from special_court_munich import ProcessSegment
+from special_court_munich import process_segment
 
 
 class TestParseProcessSegments(unittest.TestCase):
@@ -27,7 +27,7 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         expected_number_of_people_involved_in_process = 8  # not 11!
         number_of_people_output = (
-            ProcessSegment.get_number_of_people_involved_in_process(process_text)
+            process_segment.get_number_of_people_involved_in_process(process_text)
         )
         self.assertEqual(
             expected_number_of_people_involved_in_process, number_of_people_output
@@ -66,7 +66,7 @@ class TestParseProcessSegments(unittest.TestCase):
             "Josef",
         ]
         first_name_people_output = (
-            ProcessSegment.get_first_name_of_people_involved_in_process(process_text)
+            process_segment.get_first_name_of_people_involved_in_process(process_text)
         )
         self.assertEqual(
             expected_first_name_of_people_involved_in_process,
@@ -106,7 +106,7 @@ class TestParseProcessSegments(unittest.TestCase):
             "TRIENDL",
         ]
         last_name_people_output = (
-            ProcessSegment.get_last_name_of_people_involved_in_process(process_text)
+            process_segment.get_last_name_of_people_involved_in_process(process_text)
         )
         self.assertEqual(
             expected_last_name_of_people_involved_in_process, last_name_people_output
@@ -116,7 +116,7 @@ class TestParseProcessSegments(unittest.TestCase):
         process_text = "... Test NSDAP-Blabla ..."
         wrong_output = ["NSDAP"]
         last_name_person_output = (
-            ProcessSegment.get_last_name_of_people_involved_in_process(process_text)
+            process_segment.get_last_name_of_people_involved_in_process(process_text)
         )
         self.assertNotEqual(wrong_output, last_name_person_output)
 
@@ -127,7 +127,7 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         expected_output = ["Peter Markus"]
         full_first_name_person_output = (
-            ProcessSegment.get_first_name_of_people_involved_in_process(process_text)
+            process_segment.get_first_name_of_people_involved_in_process(process_text)
         )
         self.assertEqual(expected_output, full_first_name_person_output)
 
@@ -138,7 +138,7 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         expected_output = ["Bäckermeisterin"]
         full_first_name_person_output = (
-            ProcessSegment.get_occupation_of_people_involved_in_process(process_text)
+            process_segment.get_occupation_of_people_involved_in_process(process_text)
         )
         self.assertEqual(expected_output, full_first_name_person_output)
 
@@ -175,7 +175,7 @@ class TestParseProcessSegments(unittest.TestCase):
             "Maler",
         ]
         occupations_output = (
-            ProcessSegment.get_occupation_of_people_involved_in_process(process_text)
+            process_segment.get_occupation_of_people_involved_in_process(process_text)
         )
         self.assertEqual(expected_occupations, occupations_output)
 
@@ -186,7 +186,7 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         expected_output = ["Gastwirt", "Schuhmacher"]
         full_first_name_person_output = (
-            ProcessSegment.get_occupation_of_people_involved_in_process(process_text)
+            process_segment.get_occupation_of_people_involved_in_process(process_text)
         )
         self.assertEqual(expected_output, full_first_name_person_output)
 
@@ -200,7 +200,7 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         expected_occupations = ["Küchengehilfin"]
         occupations_output = (
-            ProcessSegment.get_occupation_of_people_involved_in_process(process_text)
+            process_segment.get_occupation_of_people_involved_in_process(process_text)
         )
         self.assertEqual(expected_occupations, occupations_output)
 
@@ -210,7 +210,7 @@ class TestParseProcessSegments(unittest.TestCase):
         process_text = "Prozeß gegen den Kunsthistoriker und Heimatforscher Wilhelm KAISER (geb.7. Spt.1890)"
         expected_occupations = ["Kunsthistoriker und Heimatforscher"]
         occupations_output = (
-            ProcessSegment.get_occupation_of_people_involved_in_process(process_text)
+            process_segment.get_occupation_of_people_involved_in_process(process_text)
         )
         self.assertEqual(expected_occupations, occupations_output)
 
@@ -221,7 +221,7 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         expected_occupations = ["ldw. Arbeiterin"]
         occupations_output = (
-            ProcessSegment.get_occupation_of_people_involved_in_process(process_text)
+            process_segment.get_occupation_of_people_involved_in_process(process_text)
         )
         self.assertEqual(expected_occupations, occupations_output)
 
@@ -233,7 +233,7 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         expected_occupations = ["kath. Pfarrer"]
         occupations_output = (
-            ProcessSegment.get_occupation_of_people_involved_in_process(process_text)
+            process_segment.get_occupation_of_people_involved_in_process(process_text)
         )
         self.assertEqual(expected_occupations, occupations_output)
 
@@ -244,7 +244,7 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         expected_occupations = ["kfm. Angestellten"]
         occupations_output = (
-            ProcessSegment.get_occupation_of_people_involved_in_process(process_text)
+            process_segment.get_occupation_of_people_involved_in_process(process_text)
         )
         self.assertEqual(expected_occupations, occupations_output)
 
@@ -256,7 +256,7 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         expected_occupations = ["landw. Arbeiter"]
         occupations_output = (
-            ProcessSegment.get_occupation_of_people_involved_in_process(process_text)
+            process_segment.get_occupation_of_people_involved_in_process(process_text)
         )
         self.assertEqual(expected_occupations, occupations_output)
 
@@ -280,7 +280,9 @@ class TestParseProcessSegments(unittest.TestCase):
             ("Anton", "DOPFER", "NSDAPMitglied und Hilfspolizist"),
             ("Karl", "BIBER", "aus Dattenhausen (Lkr. Illertissen)"),
         ]
-        additional_person_data = ProcessSegment.get_additional_person_data(process_text)
+        additional_person_data = process_segment.get_additional_person_data(
+            process_text
+        )
         self.assertEqual(expected_output, additional_person_data)
 
     def test_get_birthday_of_people_involved_in_process(self):
@@ -299,7 +301,7 @@ class TestParseProcessSegments(unittest.TestCase):
             "1910-04-19",
             "1907-12-04",
         ]
-        birthday_output = ProcessSegment.get_birthday_of_people_involved_in_process(
+        birthday_output = process_segment.get_birthday_of_people_involved_in_process(
             process_text
         )
         self.assertEqual(expected_output, birthday_output)
@@ -312,7 +314,7 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         expected_occupations = ["Hilfsarbeiter"]
         occupations_output = (
-            ProcessSegment.get_occupation_of_people_involved_in_process(process_text)
+            process_segment.get_occupation_of_people_involved_in_process(process_text)
         )
         self.assertEqual(expected_occupations, occupations_output)
 
@@ -323,7 +325,7 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         expected_verdict_paragraph = "5 KLs So 57/41"
         try:
-            verdict_paragraph_output = ProcessSegment.get_process_case_id(process_text)
+            verdict_paragraph_output = process_segment.get_process_case_id(process_text)
             self.assertEqual(expected_verdict_paragraph, verdict_paragraph_output)
-        except ProcessSegment.ProcessCaseIdException as e:
+        except process_segment.ProcessCaseIdException as e:
             self.fail(e.message)

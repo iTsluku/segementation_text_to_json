@@ -2,13 +2,16 @@ class CorpusStats:
     """Values for quantifying data extraction success."""
 
     @staticmethod
-    def inc_val(x: int) -> int:
-        """Incremented the value of the given integer by one.
+    def inc_val(val: int) -> int:
+        """Increment the value of the given integer by one.
+
+        Parameters:
+            val (int): Input value.
 
         Returns:
-            int: incremented value of the given integer.
+            int: Incremented value of the given integer.
         """
-        return x + 1
+        return val + 1
 
     def __init__(self):
         self.parsed_docs = 0

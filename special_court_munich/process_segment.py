@@ -1,7 +1,7 @@
 import re
 
 from typing import List, Tuple
-from special_court_munich.CorpusStats import CorpusStats
+from special_court_munich.corpus import CorpusStats
 
 
 class ProcessCaseIdException(Exception):
