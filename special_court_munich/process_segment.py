@@ -114,20 +114,9 @@ def parse_process_segment(
             or last_names_n != birthdays_n
         ):
             # segment might address more people/names, but they don't have to be mandatory accused of sth
-            """if
-            print("---")
-            print(f"{first_names=}")
-            print(f"{last_names=}")
-            print(f"{first_names_n}/{number_of_people}")
-            print(f"{last_names_n}/{number_of_people}")
-            print(zip(first_names, last_names))
-            print(birthdays)
-            print(p)
-            print("---")
-            """
             raise ExtractProcessDataException
 
-        d["Personen"] = [{}] * last_names_n
+        d["Personen"] = [{} for _ in range(last_names_n)]
 
         for i in range(last_names_n):
             corpus_stats.inc_val_people()

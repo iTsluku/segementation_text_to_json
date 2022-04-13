@@ -61,8 +61,6 @@ def text_segmentation_alg(file_path: str, document_id: str) -> List[dict]:
             # check if dict is empty --exception was raised while parsing segments for the given paragraph
             if paragraph_as_dict:
                 process_paragraphs_dict_list.append(paragraph_as_dict)
-
-        # end of "parser" -> no exception raised
         corpus_stats.inc_val_valid_docs()
     except InvalidIdParagraph:
         pass
@@ -83,7 +81,6 @@ def main():
         process_types = _dir
         break
 
-    # [('/home/andreas/dh/text_to_json/text/Eingestellte_Verfahren', 'Eingestellte_Verfahren'), ...]
     process_paths_and_types = []  # (path,process_type)
 
     for process_type in process_types:
@@ -94,7 +91,6 @@ def main():
 
     for (p, t) in process_paths_and_types:
         for path, _, files in os.walk(p):
-            # [('00118', '00118-NSJUSTIZ-BAND3-Teil_1-3_1_a_Prozesse_1934-20190129T163853l__PROCESSED.txt'), ...]
             ids_and_filenames = []  # (id,file)
 
             for file in files:
