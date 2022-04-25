@@ -126,6 +126,8 @@ def parse_process_segment(
             d["Personen"][i]["Nachname"] = last_name
             d["Personen"][i]["Beruf"] = occupations[i]
             d["Personen"][i]["Geburtsdatum"] = birthdays[i]
+            d["Personen"][i]["Anklage"] = "TODO"  # TODO
+            d["Personen"][i]["Prozessausgang"] = "TODO"  # TODO
             d["Personen"][i]["Zusatz"] = None
             for p in additional_person_data:
                 if p[0] == first_name and p[1] == last_name:
@@ -237,6 +239,7 @@ def get_additional_person_data(process_text: str) -> List[Tuple[str, str, str]]:
     Returns:
         List[Tuple[str, str, str]]: List of people by first name, last name and additional data.
     """
+    # TODO reduce complexity by considering only process segments with one person
     additional_person_data = pattern_additional_person_data.findall(process_text)
     return [(x.strip(), y.strip(), z.strip()) for (x, y, z) in additional_person_data]
 

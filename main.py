@@ -2,12 +2,8 @@ import os
 import json
 
 from pathlib import Path
-from typing import List
-
-from special_court_munich import process_document
-from special_court_munich import preprocess_segment
-from special_court_munich import process_segment
 from special_court_munich.corpus import CorpusStats
+from special_court_munich.process_document import text_segmentation_alg
 
 
 class InvalidDocumentName(Exception):
@@ -16,63 +12,11 @@ class InvalidDocumentName(Exception):
     pass
 
 
-class InvalidIdParagraph(Exception):
-    """Raised when the document id paragraph is not valid."""
-
-    pass
-
-
-class ParagraphSegmentationException(Exception):
-    """Raised when the paragraphs can't be segmented."""
-
-    pass
-
-
-# setup
-cwd = os.getcwd()
-corpus_stats = CorpusStats()
-
-
-def text_segmentation_alg(file_path: str, document_id: str) -> List[dict]:
-    global corpus_stats
-    """
-    Return list with processes, empty list if document is invalid.
-    """
-    process_paragraphs_dict_list = []
-    try:
-        old_ids = process_document.get_old_ids(file_path)
-        new_ids = process_document.get_new_ids(file_path)
-
-        if len(old_ids) == 0 or len(new_ids) == 0 or len(old_ids) != len(new_ids):
-            raise InvalidIdParagraph
-
-        process_paragraphs = process_document.parse_process_paragraphs(
-            file_path, len(old_ids)
-        )
-        process_paragraphs = preprocess_segment.preprocess_processes(process_paragraphs)
-
-        if len(process_paragraphs) != len(old_ids):
-            raise ParagraphSegmentationException
-
-        for i, process_paragraph in enumerate(process_paragraphs):
-            paragraph_as_dict, corpus_stats = process_segment.parse_process_segment(
-                old_ids[i], new_ids[i], document_id, process_paragraph
-            )
-            # check if dict is empty --exception was raised while parsing segments for the given paragraph
-            if paragraph_as_dict:
-                process_paragraphs_dict_list.append(paragraph_as_dict)
-        corpus_stats.inc_val_valid_docs()
-    except InvalidIdParagraph:
-        pass
-    except ParagraphSegmentationException:
-        pass
-    finally:
-        corpus_stats.inc_val_parsed_docs()
-        return process_paragraphs_dict_list
-
-
 def main():
-    dictionary = {"CorpusStats": {}, "Dokumente": {}}
+    cwd = os.getcwd()
+    output_path_abs = os.path.join(cwd, "output/output.json")
+    corpus_stats = CorpusStats()
+    data = {"CorpusStats": {}, "Dokumente": {}}
     path_txt = os.path.join(cwd, "text")
     Path(os.path.join(cwd, "output")).mkdir(parents=True, exist_ok=True)
     process_types = []
@@ -87,7 +31,7 @@ def main():
         process_paths_and_types.append(
             (os.path.join(path_txt, process_type), process_type)
         )
-        dictionary["Dokumente"][process_type] = []
+        data["Dokumente"][process_type] = []
 
     for (p, t) in process_paths_and_types:
         for path, _, files in os.walk(p):
@@ -104,19 +48,17 @@ def main():
                 except InvalidDocumentName:
                     pass
             ids_and_filenames.sort(key=lambda x: x[0])
-            dictionary["Dokumente"][t] = []
+            data["Dokumente"][t] = []
 
             for (document_id, f) in ids_and_filenames:
-                p_d_list = text_segmentation_alg(
-                    os.path.join(path, f), str(document_id)
+                p_d_list, corpus_stats = text_segmentation_alg(
+                    os.path.join(path, f), str(document_id), corpus_stats
                 )
                 for p_d in p_d_list:
-                    dictionary["Dokumente"][t].append(p_d)
-    dictionary["CorpusStats"] = corpus_stats.get_repr_dict()
-    with open(
-        os.path.join(cwd, "output/output.json"), mode="w", encoding="utf-8"
-    ) as fp:
-        json.dump(dictionary, fp, ensure_ascii=False)
+                    data["Dokumente"][t].append(p_d)
+    data["CorpusStats"] = corpus_stats.get_repr_dict()
+    with open(output_path_abs, mode="w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False)
 
 
 if __name__ == "__main__":

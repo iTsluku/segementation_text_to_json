@@ -1,4 +1,19 @@
-from typing import List
+from typing import List, Tuple
+
+from special_court_munich import preprocess_segment, process_segment
+from special_court_munich.corpus import CorpusStats
+
+
+class InvalidIdParagraph(Exception):
+    """Raised when the document id paragraph is not valid."""
+
+    pass
+
+
+class ParagraphSegmentationException(Exception):
+    """Raised when the paragraphs can't be segmented."""
+
+    pass
 
 
 def get_old_ids(file_path: str) -> List[str]:
@@ -108,3 +123,40 @@ def remove_linebreak_hyphen(line: str) -> str:
             prev = c
     o += prev
     return o
+
+
+def text_segmentation_alg(
+    file_path: str, document_id: str, corpus_stats: CorpusStats
+) -> Tuple[List[dict], CorpusStats]:
+    """
+    Return list with processes, empty list if document is invalid.
+    """
+    process_paragraphs_dict_list = []
+    try:
+        old_ids = get_old_ids(file_path)
+        new_ids = get_new_ids(file_path)
+
+        if len(old_ids) == 0 or len(new_ids) == 0 or len(old_ids) != len(new_ids):
+            raise InvalidIdParagraph
+
+        process_paragraphs = parse_process_paragraphs(file_path, len(old_ids))
+        process_paragraphs = preprocess_segment.preprocess_processes(process_paragraphs)
+
+        if len(process_paragraphs) != len(old_ids):
+            raise ParagraphSegmentationException
+
+        for i, process_paragraph in enumerate(process_paragraphs):
+            paragraph_as_dict, corpus_stats = process_segment.parse_process_segment(
+                old_ids[i], new_ids[i], document_id, process_paragraph, corpus_stats
+            )
+            # check if dict is empty --exception was raised while parsing segments for the given paragraph
+            if paragraph_as_dict:
+                process_paragraphs_dict_list.append(paragraph_as_dict)
+        corpus_stats.inc_val_valid_docs()
+    except InvalidIdParagraph:
+        pass
+    except ParagraphSegmentationException:
+        pass
+    finally:
+        corpus_stats.inc_val_parsed_docs()
+        return process_paragraphs_dict_list, corpus_stats
