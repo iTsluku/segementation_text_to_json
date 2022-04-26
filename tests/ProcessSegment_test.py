@@ -285,6 +285,24 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         self.assertEqual(expected_output, additional_person_data)
 
+    def test_get_additional_data_two_people_same_location(self):
+        process_text = (
+            "Prozeß gegen den Zimmermann Kaspar SEEBERGER (geb. 6. Jan. 1902) und dessenBruder, "
+            "den Zimmermeister Xaver SEEBERGER(geb. 7. Okt. 1896), "
+            "beide aus Marktoffingen (Lkr. Nördlingen), wegen derBehauptung, "
+            'auf einem Auto mit SA-Leutensei gestanden "Hier werden Ablässe verkauft".'
+            "Urteil: Kaspar S. Freispruch;Xaver 58. "
+            "Verfahren eingestellt6. Spt. 1935 - 17. Jun. 1936(AK 119/36)"
+        )
+        expected_output = [
+            ("Kaspar", "SEEBERGER", "aus Marktoffingen (Lkr. Nördlingen)"),
+            ("Xaver", "SEEBERGER", "aus Marktoffingen (Lkr. Nördlingen)"),
+        ]
+        additional_person_data = process_segment.get_additional_person_data(
+            process_text
+        )
+        self.assertEqual(expected_output, additional_person_data)
+
     def test_get_birthday_of_people_involved_in_process(self):
         process_text = (
             "Ermittlungsverfahren gegen den Landwirt undehemaligen "

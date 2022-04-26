@@ -241,7 +241,20 @@ def get_additional_person_data(process_text: str) -> List[Tuple[str, str, str]]:
     """
     # TODO reduce complexity by considering only process segments with one person
     additional_person_data = pattern_additional_person_data.findall(process_text)
-    return [(x.strip(), y.strip(), z.strip()) for (x, y, z) in additional_person_data]
+    additional_person_data = [
+        (x.strip(), y.strip(), z.strip()) for (x, y, z) in additional_person_data
+    ]
+    number_people_involved = len(additional_person_data)
+    if number_people_involved == 2:
+        replacement = None
+        for data in [z for (x, y, z) in additional_person_data]:
+            if "beide aus" in data:
+                replacement = data.replace("beide ", "").strip()
+        if replacement:
+            additional_person_data = [
+                (x, y, replacement) for (x, y, z) in additional_person_data
+            ]
+    return additional_person_data
 
 
 def get_process_case_id(process_text: str) -> str:
