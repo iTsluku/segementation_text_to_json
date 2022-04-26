@@ -242,17 +242,21 @@ def get_additional_person_data(process_text: str) -> List[Tuple[str, str, str]]:
     # TODO reduce complexity by considering only process segments with one person
     additional_person_data = pattern_additional_person_data.findall(process_text)
     additional_person_data = [
-        (x.strip(), y.strip(), z.strip()) for (x, y, z) in additional_person_data
+        (x.strip(), y.strip(), z.strip())
+        for (x, y, z) in additional_person_data
+        if z != "und"
     ]
-    number_people_involved = len(additional_person_data)
+    number_people_involved = get_number_of_people_involved_in_process(process_text)
     if number_people_involved == 2:
         replacement = None
         for data in [z for (x, y, z) in additional_person_data]:
-            if "beide aus" in data:
-                replacement = data.replace("beide ", "").strip()
+            if "beide aus" in data or "beideaus" in data:
+                replacement = data.replace("beide", "").strip()
         if replacement:
+            first_names = get_first_name_of_people_involved_in_process(process_text)
+            last_names = get_last_name_of_people_involved_in_process(process_text)
             additional_person_data = [
-                (x, y, replacement) for (x, y, z) in additional_person_data
+                (x, y, replacement) for (x, y) in zip(first_names, last_names)
             ]
     return additional_person_data
 

@@ -303,6 +303,22 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         self.assertEqual(expected_output, additional_person_data)
 
+    def test_get_additional_data_remove_and_case(self):
+        process_text = (
+            "Prozeß gegen den Hilfsarbeiter Hermann FABER (geb. 15. Nov. 1920) "
+            "und den Gärtner Hugo SATTLER (geb. 17. Mrz.1921) wegen Gefangenenmeuterei in "
+            "Kaufbeuren.Urteil: Faber 6 Jahre Zuchthaus; Sattler5 Jahre Zuchthaus; "
+            "Faber und Sattler Aberkennung der bürgerlichenEhrenrechte auf je 3 Jahre."
+            "(3 1 Ges.z.Gewährl.d.Rechtsfriedens)27. Mrz. 1940 - 14. Apr. 1944(1 KLs So 133/40)"
+        )
+        expected_output = []
+        bad_output = [("Hermann", "FABER", "und")]
+        additional_person_data = process_segment.get_additional_person_data(
+            process_text
+        )
+        self.assertEqual(expected_output, additional_person_data)
+        self.assertNotEqual(bad_output, additional_person_data)
+
     def test_get_birthday_of_people_involved_in_process(self):
         process_text = (
             "Ermittlungsverfahren gegen den Landwirt undehemaligen "
