@@ -318,6 +318,35 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         self.assertEqual(expected_occupations, occupations_output)
 
+    def test_ignore_ethnic_affiliation_occupation_prefix(self):
+        process_text = (
+            "Prozeß gegen den jüdischen Kaufmann Hermann LEESER (geb. 2. Feb. 1884) aus Bad Ischl,den "
+            "Geschäftsführer Otto SZAMEITAT (geb.24. Aug. 1896), die Haushälterin Martha STUSCHE "
+            "(geb. 13. Mrz. 1884), die Buchhalterin Auguste SCHOLTEN (geb. 6. Okt. 1892),"
+            "die Direktrice Anna VEH (geb. 20. Jun. 1902),die Pensionistensehefrau Anna VEH "
+            "(geb.30. Mai 1874), alle aus Augsburg und den Ingenieur Theodor FRIEDRICH aus Bad Aussee,"
+            "wegen Devisenvergehens.Verfahren gegen Friedrich wegen Verjährungeingestellt; "
+            "Verfahren gegen Anna Veh (altund jung) wegen Amnestie eingestellt; "
+            "Verfahren gegen Auguste Scholten eingestellt.Leeser gest. 27. Feb. 1938 in Auslieferungshaft."
+            "Urteil: Szameitat 2 Jahre 10 Monate Zuchthaus, Geldstrafe oder 50 Tage Gefängnis, "
+            "Aberkennung der bürgerlichen Ehrenrechte auf 4 Jahre;Stusche 1 Jahr 3 Monate "
+            "Gefängnis,Geldstrafe oder 21 Tage Gefängnis"
+            "(Devisengesetze; VVG)8. Feb. 1938 - 15. Jul. 1941(2 KMs So 2/39)"
+        )
+        expected_occupations = [
+            "Kaufmann",
+            "Geschäftsführer",
+            "Haushälterin",
+            "Buchhalterin",
+            "Direktrice",
+            "Pensionistensehefrau",
+            "Ingenieur",
+        ]
+        occupations_output = (
+            process_segment.get_occupation_of_people_involved_in_process(process_text)
+        )
+        self.assertEqual(expected_occupations, occupations_output)
+
     def test_get_process_id(self):
         process_text = (
             "Prozeß gegen den kfm. Angestellten Franz MAYER (geb. 24. Mrz. 1907) aus Münchenwegen Urkundenfälschung."

@@ -37,17 +37,17 @@ month_number = {
 }
 pattern_person = re.compile(r"(?:(?:[A-ZÄÖÜ][a-zäöü-]+)+\s)+([A-ZÄÖÜ-]{3,})(?=[\s(,])")
 pattern_first_name_person = re.compile(
-    r"(?:den|die)\s?(?:polnischen|polnische)?\s?(?:ldw.|kath.|kfm.|landw.)?\s?"
+    r"(?:den|die)\s?(?:jüdischen|jüdische|polnischen|polnische)?\s?(?:ldw.|kath.|kfm.|landw.)?\s?"
     r"[A-ZÄÖÜ][a-zäöü-]+(?:\sund\s[A-ZÄÖÜ][a-zäöü-]+)?\s"
     r"((?:(?:[A-ZÄÖÜ][a-zäöü-]+)+\s)+)[A-ZÄÖÜ-]{3,}(?=[\s(,])"
 )
 pattern_last_name_person = re.compile(
-    r"(?:den|die)\s?(?:polnischen|polnische)?\s?(?:ldw.|kath.|kfm.|landw.)?\s?"
+    r"(?:den|die)\s?(?:jüdischen|jüdische|polnischen|polnische)?\s?(?:ldw.|kath.|kfm.|landw.)?\s?"
     r"[A-ZÄÖÜ][a-zäöü-]+(?:\sund\s[A-ZÄÖÜ][a-zäöü-]+)?\s"
     r"(?:(?:[A-ZÄÖÜ][a-zäöü-]+)+\s)+([A-ZÄÖÜ-]{3,})(?=[\s(,])"
 )
 pattern_occupation_person = re.compile(
-    r"(?:den|die)\s?(?:polnischen|polnische)?\s?((?:ldw.|kath.|kfm.|landw.)?\s?"
+    r"(?:den|die)\s?(?:jüdischen|jüdische|polnischen|polnische)?\s?((?:ldw.|kath.|kfm.|landw.)?\s?"
     r"[A-ZÄÖÜ][a-zäöü-]+(?:\sund\s[A-ZÄÖÜ][a-zäöü-]+)?)\s"
     r"(?:(?:[A-ZÄÖÜ][a-zäöü-]+)+\s)+[A-ZÄÖÜ-]{3,}(?=[\s(,])"
 )
@@ -56,7 +56,7 @@ pattern_birthday_person = re.compile(
     r"\s?\(\s?\w{1,3}(?:\s|\.|,)?\s?(\d{1,2})(?:\s|\.|,)?\s?([JFMASOND][a-z]+)(?:\s|\.|,)?\s?(\d{4})\s?\)"
 )
 pattern_additional_person_data = re.compile(
-    r"(?:den|die)\s?(?:polnischen|polnische)?\s?(?:ldw.|kath.|kfm.|landw.)?\s?"
+    r"(?:den|die)\s?(?:jüdischen|jüdische|polnischen|polnische)?\s?(?:ldw.|kath.|kfm.|landw.)?\s?"
     r"[A-ZÄÖÜ][a-zäöü-]+(?:\sund\s[A-ZÄÖÜ][a-zäöü-]+)?\s"
     r"((?:(?:[A-ZÄÖÜ][a-zäöü-]+)+\s)+)([A-ZÄÖÜ-]{3,})"
     r"\s?\(\s?\w{1,3}(?:\s|\.|,)?\s?\d{1,2}(?:\s|\.|,)?\s?[JFMASOND][a-z]+(?:\s|\.|,)?\s?\d{4}\s?\)"
