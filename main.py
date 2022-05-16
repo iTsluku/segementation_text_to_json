@@ -17,7 +17,7 @@ def main():
     output_path_abs = os.path.join(cwd, "output/output.json")
     corpus_stats = CorpusStats()
     data = {"CorpusStats": {}, "Dokumente": {}}
-    path_txt = os.path.join(cwd, "text")
+    path_txt = os.path.join(cwd, "text_old")
     Path(os.path.join(cwd, "output")).mkdir(parents=True, exist_ok=True)
     process_types = []
 

@@ -86,7 +86,7 @@ def parse_process_segment(
         "ID_Archiv_Alt": old_id,
         "ID_Archiv_Neu": new_id,
         "ID_Seite": document_id,
-        "ID_Prozess": None,
+        "ID_Prozess": None,  # TODO universal key
         "Text": process_text,
     }
 
@@ -127,7 +127,7 @@ def parse_process_segment(
             d["Personen"][i]["Beruf"] = occupations[i]
             d["Personen"][i]["Geburtsdatum"] = birthdays[i]
             d["Personen"][i]["Anklage"] = "TODO"  # TODO
-            d["Personen"][i]["Prozessausgang"] = "TODO"  # TODO
+            d["Personen"][i]["Verfahrensausgang"] = "TODO"  # TODO
             d["Personen"][i]["Zusatz"] = None
             for p in additional_person_data:
                 if p[0] == first_name and p[1] == last_name:
