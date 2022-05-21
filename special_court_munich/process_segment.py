@@ -258,6 +258,17 @@ def get_additional_person_data(process_text: str) -> List[Tuple[str, str, str]]:
             additional_person_data = [
                 (x, y, replacement) for (x, y) in zip(first_names, last_names)
             ]
+    elif number_people_involved > 2:
+        replacement = None
+        for data in [z for (x, y, z) in additional_person_data]:
+            if "alle aus" in data or "alleaus" in data:
+                replacement = data.replace("alle", "").strip()
+        if replacement:
+            first_names = get_first_name_of_people_involved_in_process(process_text)
+            last_names = get_last_name_of_people_involved_in_process(process_text)
+            additional_person_data = [
+                (x, y, replacement) for (x, y) in zip(first_names, last_names)
+            ]
     return additional_person_data
 
 
