@@ -86,7 +86,7 @@ def parse_process_segment(
         "ID_Archiv_Alt": old_id,
         "ID_Archiv_Neu": new_id,
         "ID_Seite": document_id,
-        "ID_Prozess": None,
+        "ID_Prozess": None,  # TODO universal key
         "Text": process_text,
     }
 
@@ -127,7 +127,7 @@ def parse_process_segment(
             d["Personen"][i]["Beruf"] = occupations[i]
             d["Personen"][i]["Geburtsdatum"] = birthdays[i]
             d["Personen"][i]["Anklage"] = "TODO"  # TODO
-            d["Personen"][i]["Prozessausgang"] = "TODO"  # TODO
+            d["Personen"][i]["Verfahrensausgang"] = "TODO"  # TODO
             d["Personen"][i]["Zusatz"] = None
             for p in additional_person_data:
                 if p[0] == first_name and p[1] == last_name:
@@ -252,6 +252,17 @@ def get_additional_person_data(process_text: str) -> List[Tuple[str, str, str]]:
         for data in [z for (x, y, z) in additional_person_data]:
             if "beide aus" in data or "beideaus" in data:
                 replacement = data.replace("beide", "").strip()
+        if replacement:
+            first_names = get_first_name_of_people_involved_in_process(process_text)
+            last_names = get_last_name_of_people_involved_in_process(process_text)
+            additional_person_data = [
+                (x, y, replacement) for (x, y) in zip(first_names, last_names)
+            ]
+    elif number_people_involved > 2:
+        replacement = None
+        for data in [z for (x, y, z) in additional_person_data]:
+            if "alle aus" in data or "alleaus" in data:
+                replacement = data.replace("alle", "").strip()
         if replacement:
             first_names = get_first_name_of_people_involved_in_process(process_text)
             last_names = get_last_name_of_people_involved_in_process(process_text)

@@ -303,6 +303,22 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         self.assertEqual(expected_output, additional_person_data)
 
+    def test_get_additional_data_all_people_same_location(self):
+        process_text = (
+            "Prozeß gegen den Schuhmacher Josef DAVID(geb. 22. Jan. 1899), den Heizer Heinrich DAVID "
+            "(geb. 14. Spt. 1897), den Schneider Johann WEIDINGER (geb. 22, Okt. 1895),alle aus München, "
+            "wegen Verbreitungkommunistischer Flugblätter."
+        )
+        expected_output = [
+            ("Josef", "DAVID", "aus München"),
+            ("Heinrich", "DAVID", "aus München"),
+            ("Johann", "WEIDINGER", "aus München"),
+        ]
+        additional_person_data = process_segment.get_additional_person_data(
+            process_text
+        )
+        self.assertEqual(expected_output, additional_person_data)
+
     def test_get_additional_data_remove_and_case(self):
         process_text = (
             "Prozeß gegen den Hilfsarbeiter Hermann FABER (geb. 15. Nov. 1920) "
