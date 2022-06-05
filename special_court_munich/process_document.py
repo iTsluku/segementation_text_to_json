@@ -167,7 +167,9 @@ class ColumnFormat:
         return process_paragraphs
 
     @staticmethod
-    def parse_document(file_path: str, document_id: str, corpus_stats: CorpusStats):
+    def parse_document(
+        file_path: str, filename: str, document_id: str, corpus_stats: CorpusStats
+    ):
         """
         Return list with processes, empty list if document is invalid.
         """
@@ -186,7 +188,12 @@ class ColumnFormat:
 
         for i, process_paragraph in enumerate(process_paragraphs):
             paragraph_as_dict, corpus_stats = process_segment.parse_process_segment(
-                old_ids[i], new_ids[i], document_id, process_paragraph, corpus_stats
+                filename,
+                old_ids[i],
+                new_ids[i],
+                document_id,
+                process_paragraph,
+                corpus_stats,
             )
             # check if dict is empty --exception was raised while parsing segments for the given paragraph
             if paragraph_as_dict:
@@ -227,7 +234,9 @@ class RowFormat:
         return o.lstrip()
 
     @staticmethod
-    def parse_document(file_path: str, document_id: str, corpus_stats: CorpusStats):
+    def parse_document(
+        file_path: str, filename: str, document_id: str, corpus_stats: CorpusStats
+    ):
         process_paragraphs_dict_list = []
         old_ids = []
         new_ids = []
@@ -256,17 +265,14 @@ class RowFormat:
                             w_check = w1 + " " + w2
                             if w_check in line:
                                 temp = ""
-                                # TODO rm debug
-                                """
-                                print(
-                                    file_path.lstrip(
-                                        "/home/andreas/dh/segmentation_text_to_json/input/text_tesseract_param_6/"
-                                    )
-                                )
-                                print(line)
-                                """
                     if temp != "":
                         temp += line
+                    else:
+                        # process paragraph temp reset -> rm ids too
+                        old_ids.pop()
+                        new_ids.pop()
+                        # TODO update corpusstats about pot. missing two proceedings.
+
         if temp != "":
             process_paragraphs.append(temp)
         if (
@@ -282,7 +288,12 @@ class RowFormat:
         process_paragraphs = preprocess_segment.preprocess_processes(process_paragraphs)
         for i, process_paragraph in enumerate(process_paragraphs):
             paragraph_as_dict, corpus_stats = process_segment.parse_process_segment(
-                old_ids[i], new_ids[i], document_id, process_paragraph, corpus_stats
+                filename,
+                old_ids[i],
+                new_ids[i],
+                document_id,
+                process_paragraph,
+                corpus_stats,
             )
             # check if dict is empty --exception was raised while parsing segments for the given paragraph
             if paragraph_as_dict:
@@ -292,25 +303,25 @@ class RowFormat:
 
 
 def text_segmentation_alg(
-    file_path: str, document_id: str, corpus_stats: CorpusStats
+    file_path: str, filename: str, document_id: str, corpus_stats: CorpusStats
 ) -> Tuple[List[dict], CorpusStats]:
     process_paragraphs_dict_list = []
     try:
         # try column format
         process_paragraphs_dict_list, corpus_stats = ColumnFormat.parse_document(
-            file_path, document_id, corpus_stats
+            file_path, filename, document_id, corpus_stats
         )
         corpus_stats.inc_val_valid_docs()
     except (InvalidIdParagraph, ParagraphSegmentationException):
         # colum format failed -> try row format
         try:
             process_paragraphs_dict_list, corpus_stats = RowFormat.parse_document(
-                file_path, document_id, corpus_stats
+                file_path, filename, document_id, corpus_stats
             )
             corpus_stats.inc_val_valid_docs()
         except RowFormatException:
-            pass
             # print("failed:", file_path)
+            pass
     finally:
         corpus_stats.inc_val_parsed_docs()
         return process_paragraphs_dict_list, corpus_stats

@@ -1,6 +1,9 @@
 import re
+import string
 
-from typing import List, Tuple
+from nltk.tokenize import word_tokenize
+from typing import List, Tuple, Optional
+from datetime import datetime
 from special_court_munich.corpus import CorpusStats
 
 
@@ -64,14 +67,48 @@ pattern_additional_person_data = re.compile(
 )
 
 pattern_process_case_id = re.compile(r"\(([?:<>$,;\w\d\s/-]+)\)?\s?[‘.,;|]?$")
+# Teil 7 :: Register
+pattern_document_name_duration = re.compile(
+    r"^DHUP_NSJ_\d{5}_Band_3_Sondergericht_München_Teil_[123456]_(.*)_\d+\.txt$"
+)
+
+PUNCTUATION = string.punctuation
+
+
+def get_proceeding_type(process_text: str) -> Optional[str]:
+    type1 = ["Prozeß", "Frozeß"]
+    type2 = ["Ermittlungsverfahren", "bErmittlungsverfahren"]
+
+    line_mod = ""  # rm punctuation
+    for c in process_text:
+        if c not in PUNCTUATION:
+            line_mod += c
+    line_mod = line_mod.strip()
+    words = word_tokenize(line_mod, language="german")
+    if words[0] in type1:
+        return "Prozeß"
+    elif words[1] in type2:
+        return "Ermittlunsgverfahren"
+    else:
+        return None
+
+
+def get_duration(document_name: str) -> str:
+    return pattern_document_name_duration.findall(document_name)[0]
 
 
 def parse_process_segment(
-    old_id: str, new_id: str, document_id, process_text: str, corpus_stats=CorpusStats()
+    document_name: str,
+    old_id: str,
+    new_id: str,
+    document_id,
+    process_text: str,
+    corpus_stats=CorpusStats(),
 ) -> Tuple[dict, CorpusStats]:
     """Parse process segment into a structured format.
 
     Parameters:
+        document_name (str): document name containing this proceeding.
         old_id (str): Old archive id from that process.
         new_id (str): New archive id from that process.
         document_id (str): Document (page) id.
@@ -83,15 +120,26 @@ def parse_process_segment(
     """
     p = process_text
     d = {
-        "ID_Archiv_Alt": old_id,
-        "ID_Archiv_Neu": new_id,
-        "ID_Seite": document_id,
-        "ID_Prozess": None,  # TODO universal key
-        "Text": process_text,
+        "meta": {
+            "page": document_id,
+            "document_name": document_name,
+            "type": get_proceeding_type(p),
+            "processing_time": datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
+        },
+        "proceeding": {
+            "ID": old_id,
+            "shelfmark": new_id,
+            "duration": get_duration(document_name),
+            "registration_no": None,
+            "text_original": None,  # TODO
+            "text_preprocessed": process_text,
+        },
     }
 
     try:
-        d["ID_Prozess"] = get_process_case_id(process_text)
+        d["proceeding"]["registration_no"] = get_process_case_id(
+            process_text
+        )  # TODO fix last proceeding case
     except ProcessCaseIdException:
         pass
         # print("\n", process_paragraph)  # process_paragraph[-40:]
@@ -116,22 +164,28 @@ def parse_process_segment(
             # segment might address more people/names, but they don't have to be mandatory accused of sth
             raise ExtractProcessDataException
 
-        d["Personen"] = [{} for _ in range(last_names_n)]
+        d["proceeding"]["people"] = [{} for _ in range(last_names_n)]
 
         for i in range(last_names_n):
             corpus_stats.inc_val_people()
             first_name = first_names[i]
             last_name = last_names[i]
-            d["Personen"][i]["Vorname"] = first_name
-            d["Personen"][i]["Nachname"] = last_name
-            d["Personen"][i]["Beruf"] = occupations[i]
-            d["Personen"][i]["Geburtsdatum"] = birthdays[i]
-            d["Personen"][i]["Anklage"] = "TODO"  # TODO
-            d["Personen"][i]["Verfahrensausgang"] = "TODO"  # TODO
-            d["Personen"][i]["Zusatz"] = None
+            d["proceeding"]["people"][i]["first_name"] = first_name
+            d["proceeding"]["people"][i]["last_name"] = last_name
+            d["proceeding"]["people"][i]["occupation"] = occupations[i]
+            d["proceeding"]["people"][i]["date_of_birth"] = birthdays[i]
+            d["proceeding"]["people"][i]["accusation"] = None  # TODO
+            d["proceeding"]["people"][i]["law"] = None  # TODO
+            d["proceeding"]["people"][i]["result"] = None  # TODO
+            d["proceeding"]["people"][i][
+                "additional_data"
+            ] = None  # TODO split into residence, attachements
+            d["proceeding"]["people"][i]["residence"] = None  # TODO
+            d["proceeding"]["people"][i]["attachements"] = None  # TODO
+            d["proceeding"]["people"][i]["add_prosecution"] = None  # TODO
             for p in additional_person_data:
                 if p[0] == first_name and p[1] == last_name:
-                    d["Personen"][i]["Zusatz"] = p[2]
+                    d["proceeding"]["people"][i]["additional_data"] = p[2]
                     corpus_stats.inc_val_people_add_data()
                     break
             # TODO Urteil,Anlagen
@@ -140,7 +194,7 @@ def parse_process_segment(
         d = {}
     finally:
         if d:
-            if d["ID_Prozess"]:
+            if d["proceeding"]["registration_no"]:
                 # increment, iff parsing the process segment did not raise an exception and contains process id
                 corpus_stats.inc_val_valid_process_ids()
         corpus_stats.inc_val_parsed_processes()

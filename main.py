@@ -33,7 +33,10 @@ def main():
 
     for i, (document_id, filename) in enumerate(ids_and_filenames):
         proceedings, corpus_stats = text_segmentation_alg(
-            os.path.join(text_new_dir_path, filename), str(document_id), corpus_stats
+            os.path.join(text_new_dir_path, filename),
+            filename,
+            str(document_id),
+            corpus_stats,
         )
         for p in proceedings:
             data["proceedings"].append(p)
