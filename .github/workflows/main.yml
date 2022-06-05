@@ -18,6 +18,7 @@ jobs:
         run: |
           echo Install pytest...
           pip install -U pytest
+          pip install nltk
           echo done.
       - name: Run tests
         run: |
