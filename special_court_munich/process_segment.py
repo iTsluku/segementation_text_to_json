@@ -66,7 +66,7 @@ pattern_additional_person_data = re.compile(
     r"[\s,;]\s?([\w\s+)(.-]+?)\s?[\s,;]\s?(?=den|die|wegen)"
 )
 
-pattern_process_case_id = re.compile(r"\(([?:<>$,;\w\d\s/-]+)\)?\s?[‘.,;|]?$")
+pattern_parenthesis_content_post_birthday = re.compile(r"^.*\(.*\).*\((.+)\)\s?.*$")
 # Teil 7 :: Register
 pattern_document_name_duration = re.compile(
     r"^DHUP_NSJ_\d{5}_Band_3_Sondergericht_München_Teil_[123456]_(.*)_\d+\.txt$"
@@ -137,7 +137,7 @@ def parse_process_segment(
     }
 
     try:
-        d["proceeding"]["registration_no"] = get_process_case_id(
+        d["proceeding"]["registration_no"] = get_registration_no(
             process_text
         )  # TODO fix last proceeding case
     except ProcessCaseIdException:
@@ -167,7 +167,7 @@ def parse_process_segment(
         d["proceeding"]["people"] = [{} for _ in range(last_names_n)]
 
         for i in range(last_names_n):
-            corpus_stats.inc_val_people()
+            corpus_stats.inc_val_persons()
             first_name = first_names[i]
             last_name = last_names[i]
             d["proceeding"]["people"][i]["first_name"] = first_name
@@ -177,27 +177,23 @@ def parse_process_segment(
             d["proceeding"]["people"][i]["accusation"] = None  # TODO
             d["proceeding"]["people"][i]["law"] = None  # TODO
             d["proceeding"]["people"][i]["result"] = None  # TODO
-            d["proceeding"]["people"][i][
-                "additional_data"
-            ] = None  # TODO split into residence, attachements
-            d["proceeding"]["people"][i]["residence"] = None  # TODO
+            d["proceeding"]["people"][i]["residence"] = None
             d["proceeding"]["people"][i]["attachements"] = None  # TODO
             d["proceeding"]["people"][i]["add_prosecution"] = None  # TODO
             for p in additional_person_data:
                 if p[0] == first_name and p[1] == last_name:
-                    d["proceeding"]["people"][i]["additional_data"] = p[2]
-                    corpus_stats.inc_val_people_add_data()
+                    if p[2].strip().split()[0] == "aus":
+                        d["proceeding"]["people"][i]["residence"] = p[2].lstrip("aus ")
                     break
-            # TODO Urteil,Anlagen
-        corpus_stats.inc_val_valid_processes()
+        corpus_stats.inc_val_valid_proceedings()
     except ExtractProcessDataException:
         d = {}
     finally:
         if d:
             if d["proceeding"]["registration_no"]:
                 # increment, iff parsing the process segment did not raise an exception and contains process id
-                corpus_stats.inc_val_valid_process_ids()
-        corpus_stats.inc_val_parsed_processes()
+                corpus_stats.inc_val_valid_registration_no()
+        corpus_stats.inc_val_parsed_proceedings()
         return d, corpus_stats
 
 
@@ -326,20 +322,25 @@ def get_additional_person_data(process_text: str) -> List[Tuple[str, str, str]]:
     return additional_person_data
 
 
-def get_process_case_id(process_text: str) -> str:
-    """Extract process id out of paragraph segment.
+def get_registration_no(process_text: str) -> str:
+    """Extract registration number out of paragraph segment.
 
     Parameters:
         process_text (str): Process text segment.
 
     Returns:
-        str: process id.
+        str: registration number.
 
     Raises:
-        ProcessIdException - Raised when the process id can't be extracted.
+        ProcessIdException - Raised when the registration number can't be extracted.
     """
-    process_id = pattern_process_case_id.findall(process_text)
-    if process_id:
-        return process_id[0]
+    registration_no = pattern_parenthesis_content_post_birthday.findall(process_text)
+    if registration_no:
+        # assume last parenthesis stack post birthday is registration number
+        check_registration_no = registration_no[-1]
+        if "geb" in check_registration_no:
+            raise ProcessCaseIdException
+        else:
+            return check_registration_no
     else:
         raise ProcessCaseIdException
