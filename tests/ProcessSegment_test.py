@@ -397,14 +397,42 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         self.assertEqual(expected_occupations, occupations_output)
 
-    def test_get_process_id(self):
+    def test_get_proceeding_id(self):
         process_text = (
             "Prozeß gegen den kfm. Angestellten Franz MAYER (geb. 24. Mrz. 1907) aus Münchenwegen Urkundenfälschung."
             "Urteil: 10 Monate Gefängnis(33 267,268 StGB)3. Jan. 1941 - 30. Jun. 1944(5 KLs So 57/41)"
         )
         expected_verdict_paragraph = "5 KLs So 57/41"
         try:
-            verdict_paragraph_output = process_segment.get_process_case_id(process_text)
+            verdict_paragraph_output = process_segment.get_registration_no(process_text)
             self.assertEqual(expected_verdict_paragraph, verdict_paragraph_output)
         except process_segment.ProcessCaseIdException as e:
             self.fail(e.message)
+
+    def test_get_id_of_last_proceeding_given_a_page(self):
+        process_text = (
+            "Prozeß gegen den Taglöhner Josef VIELHUBER (geb. 5. Dez. 1871) aus Oberhaching bei "
+            "München wegen Anschlagens dreier handschriftlicher Zettel gegen den NS. Urteil: 8 Monate Gefängnis "
+            "Anlage: Die inkriminierten Zettel 6. Jul. 1933 - 7. Mrz. 1935 | (S Pr 225/33) 38 "
+        )
+        expected_verdict_paragraph = "S Pr 225/33"
+        try:
+            verdict_paragraph_output = process_segment.get_registration_no(process_text)
+            self.assertEqual(expected_verdict_paragraph, verdict_paragraph_output)
+        except process_segment.ProcessCaseIdException as e:
+            self.fail(e.message)
+
+    def test_get_id_not_birthday(self):
+        process_text = (
+            "Prozeß gegen den Hilfsarbeiter Bruno WESTERMEIER (geb. 15. Jun. 1900) ausMünchen, "
+            "die Hilfsarbeitersehefrau Ottilie GRIMM (geb. 10. Jul. 1891) unddie Hausangestellte Ottilie "
+            "Karolina |WENSAUER (geb. 14. Nov. 1914), beide ausMünchen, wegen Verbreitung "
+            "kommunistischerFlugschriften.Urteil: Westermeier 5 Monate Gefängnis,Grimm und Wensauer Freispruch22."
+            "Au 1935 - 10. Feb. 1934rs Pr 5161337"
+        )
+        # wrong_output = "geb. 14. Nov. 1914"
+        self.assertRaises(
+            process_segment.ProcessCaseIdException,
+            process_segment.get_registration_no,
+            process_text,
+        )

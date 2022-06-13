@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import numpy as np
 from pathlib import Path
 
 from special_court_munich.corpus import CorpusStats
@@ -40,6 +41,32 @@ def main():
         )
         for p in proceedings:
             data["proceedings"].append(p)
+
+    # eval proceeding_id
+    prev_proceeding_id = int(data["proceedings"][0]["proceeding"]["ID"])
+    for proceeding in data["proceedings"]:
+        proceeding_id = int(proceeding["proceeding"]["ID"])
+        if proceeding_id > prev_proceeding_id + 1:
+            # wrong proceeding_id or just missing proceeding --test for OCR fail
+            # TODO correct or remove proceeding_id, if its bigger then next available proceeding or smaller than prev
+            # 3,992,5 -> 3,4,5
+            # TODO if rm, then mark for manual fix (doesn't occur that often!)
+            """
+            print(
+                f"{prev_proceeding_id=} {proceeding_id=} add:{proceeding_id - prev_proceeding_id - 1}"
+            )
+            """
+        prev_proceeding_id = proceeding_id
+
+    # add info about missing proceedings
+    # estimate: get last 20 proceedings IDs, take median to reduce chance of using ocr fail min-max outlier
+    id_max_estimate = int(
+        np.median([int(p["proceeding"]["ID"]) for p in data["proceedings"][-20:]])
+    )
+    proceedings_no = len(data["proceedings"])
+    for _ in range(id_max_estimate - proceedings_no):
+        corpus_stats.inc_val_missing_proceedings()
+
     data["stats"] = corpus_stats.get_repr_dict()
     with open(output_path_abs, mode="w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False)

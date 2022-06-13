@@ -271,7 +271,6 @@ class RowFormat:
                         # process paragraph temp reset -> rm ids too
                         old_ids.pop()
                         new_ids.pop()
-                        # TODO update corpusstats about pot. missing two proceedings.
 
         if temp != "":
             process_paragraphs.append(temp)

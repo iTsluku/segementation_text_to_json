@@ -16,12 +16,13 @@ jobs:
         uses: actions/checkout@v3
       - name: Install pytest
         run: |
-          echo Install pytest...
+          echo Install dependencies...
           pip install -U pytest
           pip install nltk
-          echo done.
+          pip install numpy
+          echo Done.
       - name: Run tests
         run: |
           echo Run tests...
           pytest
-          echo done.
+          echo Done.
