@@ -1,7 +1,8 @@
 import string
-from typing import List, Tuple
-
+import bs4
+from typing import List, Tuple, Optional
 from nltk.tokenize import word_tokenize
+
 from special_court_munich import preprocess_segment, process_segment
 from special_court_munich.corpus import CorpusStats
 
@@ -301,10 +302,328 @@ class RowFormat:
         return process_paragraphs_dict_list, corpus_stats
 
 
+class HOCRFormat:
+    @staticmethod
+    def is_paragraph_new_regest(paragraph: bs4.element.Tag) -> bool:
+        lines = paragraph.find_all("span", class_="ocr_line")
+        if not lines:
+            return False
+        line_check = lines[0]
+        words = line_check.find_all("span", class_="ocrx_word")
+        if not words:
+            return False
+        # check index x1 < 1400
+        check = words[0].text
+        if (
+            int(words[0]["title"].split()[1]) < 1400  # x1 threshold
+            and check not in string.punctuation  # no punctuation
+            and any(i.isdigit() for i in check)  # min one digit
+        ):
+            return True
+        return False
+
+    @staticmethod
+    def is_line_new_regest(line: bs4.element.Tag) -> bool:
+        words = line.find_all("span", class_="ocrx_word")
+        if not words:
+            return False
+        # check index x1 < 1400
+        check = words[0].text
+        if (
+            int(words[0]["title"].split()[1]) < 1400  # x1 threshold
+            and check not in string.punctuation  # no punctuation
+            and any(i.isdigit() for i in check)  # min one digit
+        ):
+            return True
+        return False
+
+    @staticmethod
+    def get_index(paragraph: bs4.element.Tag) -> Optional[str]:
+        lines = paragraph.find_all("span", class_="ocr_line")
+
+        if not lines:
+            return None
+        line_check = lines[0]
+        words = line_check.find_all("span", class_="ocrx_word")
+
+        if not words:
+            return None
+        check = words[0].text
+
+        if check[0] == "(" and check[-1] == ")" and check[1:-1].isdigit():
+            return check.replace("(", "").replace(")", "").strip()
+        return None
+
+    @staticmethod
+    def get_index_by_line(line: bs4.element.Tag) -> Optional[str]:
+        words = line.find_all("span", class_="ocrx_word")
+
+        if not words:
+            return None
+        check = words[0].text
+
+        if check[0] == "(" and check[-1] == ")" and check[1:-1].isdigit():
+            return check.replace("(", "").replace(")", "").strip()
+        return None
+
+    @staticmethod
+    def get_shelfmark(paragraph: bs4.element.Tag) -> Optional[str]:
+        lines = paragraph.find_all("span", class_="ocr_line")
+
+        if not lines:
+            return None
+        line_check = lines[0]
+        words = line_check.find_all("span", class_="ocrx_word")
+
+        if not words or len(words) < 2:
+            return None
+        check = words[1].text
+
+        if check.isdigit():
+            return check
+        return None
+
+    @staticmethod
+    def get_shelfmark_by_line(line: bs4.element.Tag) -> Optional[str]:
+        words = line.find_all("span", class_="ocrx_word")
+
+        if not words or len(words) < 2:
+            return None
+        check = words[1].text
+
+        if check.isdigit():
+            return check
+        return None
+
+    @staticmethod
+    def get_original_regest_text(paragraphs: List[bs4.element.Tag]) -> str:
+        # (2) 1352 Prozeß gegen die Hilfsarbeitersehefrau Maria SCHRAUFSTETTER (geb, 27. Aug. 1886) aus Mün- chen
+        # wegen unerlaubten Verteilens von kommu- nistischen Flugblättern., Urteil: Freispruch nach Untersuchungshaft
+        # Anlage: 2 hektographierte Flugblätter der "Rot Front" 21. Mrz. 1933 - 16, Mai 1933 (S Pr 2/33)
+        original_regest_text = []
+        for paragraph in paragraphs:
+            lines = paragraph.find_all("span", class_="ocr_line")
+            for line in lines:
+                words = line.find_all("span", class_="ocrx_word")
+                for word in words:
+                    word = word.text
+                    original_regest_text.append(word)
+        return " ".join(original_regest_text)
+
+    @staticmethod
+    def get_original_regest_text_by_lines(lines: List[bs4.element.Tag]) -> str:
+        original_regest_text = []
+        for line in lines:
+            words = line.find_all("span", class_="ocrx_word")
+            for word in words:
+                word = word.text
+                original_regest_text.append(word)
+        return " ".join(original_regest_text)
+
+    @staticmethod
+    def get_preprocessed_regest_text(paragraphs: List[bs4.element.Tag]) -> str:
+        # Prozeß gegen die Hilfsarbeitersehefrau Maria SCHRAUFSTETTER (geb, 27. Aug. 1886) aus München
+        # wegen unerlaubten Verteilens von kommunistischen Flugblättern., Urteil: Freispruch nach Untersuchungshaft
+        # Anlage: 2 hektographierte Flugblätter der "Rot Front" 21. Mrz. 1933 - 16, Mai 1933 (S Pr 2/33)
+
+        # line break Mün- chen -> München, kommu- nistischen -> kommunistischen
+        original_regest_text = []
+        for paragraph in paragraphs:
+            lines = paragraph.find_all("span", class_="ocr_line")
+            for line in lines:
+                words = line.find_all("span", class_="ocrx_word")
+                for word in words:
+                    word = word.text
+                    if word == "|":
+                        continue
+                    if original_regest_text and original_regest_text[-1][-1] == "-":
+                        original_regest_text[-1] = (
+                            original_regest_text[-1].replace("-", "") + word
+                        )
+                    else:
+                        original_regest_text.append(word)
+        return " ".join(original_regest_text[2:])
+
+    @staticmethod
+    def get_preprocessed_regest_text_by_lines(lines: List[bs4.element.Tag]) -> str:
+        original_regest_text = []
+        for line in lines:
+            words = line.find_all("span", class_="ocrx_word")
+            for word in words:
+                word = word.text
+                if word == "|":
+                    continue
+                if original_regest_text and original_regest_text[-1][-1] == "-":
+                    original_regest_text[-1] = (
+                        original_regest_text[-1].replace("-", "") + word
+                    )
+                else:
+                    original_regest_text.append(word)
+        return " ".join(original_regest_text[2:])
+
+    @staticmethod
+    def parse_document(
+        file_path: str, filename: str, document_id: str, corpus_stats: CorpusStats
+    ):
+        process_paragraphs_dict_list = []
+        temp_paragraphs = []
+        temp_lines = []
+
+        with open(file_path, "r") as file:
+            soup = bs4.BeautifulSoup(file, "html.parser")
+            _check = soup.find_all("div", class_="ocr_carea")
+            if not _check:
+                # TODO check
+                return process_paragraphs_dict_list, corpus_stats
+
+            x_min, y_min, x_max, y_max = _check[0]["title"].split()[1:]
+            paragraphs = soup.find_all("p")
+
+            if not paragraphs:
+                # TODO check
+                return process_paragraphs_dict_list, corpus_stats
+
+            if len(paragraphs) == 1:
+                # bad ocr quality, only one paragraph -> process lines not paragraphs
+                lines = paragraphs[0].find_all("span", class_="ocr_line")
+                for line in lines:
+                    if HOCRFormat.is_line_new_regest(line):
+                        if temp_lines:
+                            # process temp lines
+                            index = HOCRFormat.get_index_by_line(temp_lines[0])
+                            shelfmark = HOCRFormat.get_shelfmark_by_line(temp_lines[0])
+                            original_regest_text = (
+                                HOCRFormat.get_original_regest_text_by_lines(temp_lines)
+                            )
+                            preprocessed_regest_text = (
+                                HOCRFormat.get_preprocessed_regest_text_by_lines(
+                                    temp_lines
+                                )
+                            )
+                            (
+                                paragraph_as_dict,
+                                corpus_stats,
+                            ) = process_segment.parse_process_segment(
+                                filename,
+                                index,
+                                shelfmark,
+                                document_id,
+                                preprocessed_regest_text,
+                                corpus_stats,
+                                process_text_original=original_regest_text,
+                            )
+                            # check if dict is empty --exception was raised while parsing segments for the given paragraph
+                            if paragraph_as_dict:
+                                process_paragraphs_dict_list.append(paragraph_as_dict)
+                        temp_lines = [line]
+                    else:
+                        if temp_lines:
+                            temp_lines.append(line)
+                if temp_lines:
+                    # process remaining temp lines
+                    index = HOCRFormat.get_index_by_line(temp_lines[0])
+                    shelfmark = HOCRFormat.get_shelfmark_by_line(temp_lines[0])
+                    original_regest_text = HOCRFormat.get_original_regest_text_by_lines(
+                        temp_lines
+                    )
+                    preprocessed_regest_text = (
+                        HOCRFormat.get_preprocessed_regest_text_by_lines(temp_lines)
+                    )
+                    (
+                        paragraph_as_dict,
+                        corpus_stats,
+                    ) = process_segment.parse_process_segment(
+                        filename,
+                        index,
+                        shelfmark,
+                        document_id,
+                        preprocessed_regest_text,
+                        corpus_stats,
+                        process_text_original=original_regest_text,
+                    )
+                    # check if dict is empty --exception was raised while parsing segments for the given paragraph
+                    if paragraph_as_dict:
+                        process_paragraphs_dict_list.append(paragraph_as_dict)
+
+            else:
+                # better ocr quality, multiple paragraphs -> process paragraphs
+                for paragraph in paragraphs:
+                    if HOCRFormat.is_paragraph_new_regest(paragraph):
+                        if temp_paragraphs:
+                            # process temp paragraphs
+                            index = HOCRFormat.get_index(temp_paragraphs[0])
+                            shelfmark = HOCRFormat.get_shelfmark(temp_paragraphs[0])
+                            original_regest_text = HOCRFormat.get_original_regest_text(
+                                temp_paragraphs
+                            )
+                            preprocessed_regest_text = (
+                                HOCRFormat.get_preprocessed_regest_text(temp_paragraphs)
+                            )
+                            (
+                                paragraph_as_dict,
+                                corpus_stats,
+                            ) = process_segment.parse_process_segment(
+                                filename,
+                                index,
+                                shelfmark,
+                                document_id,
+                                preprocessed_regest_text,
+                                corpus_stats,
+                                process_text_original=original_regest_text,
+                            )
+                            # check if dict is empty --exception was raised while parsing segments for the given paragraph
+                            if paragraph_as_dict:
+                                process_paragraphs_dict_list.append(paragraph_as_dict)
+                        temp_paragraphs = [paragraph]
+                    else:
+                        if temp_paragraphs:
+                            temp_paragraphs.append(paragraph)
+
+                if temp_paragraphs:
+                    # process remaining temp paragraphs
+                    index = HOCRFormat.get_index(temp_paragraphs[0])
+                    shelfmark = HOCRFormat.get_shelfmark(temp_paragraphs[0])
+                    original_regest_text = HOCRFormat.get_original_regest_text(
+                        temp_paragraphs
+                    )
+                    preprocessed_regest_text = HOCRFormat.get_preprocessed_regest_text(
+                        temp_paragraphs
+                    )
+                    (
+                        paragraph_as_dict,
+                        corpus_stats,
+                    ) = process_segment.parse_process_segment(
+                        filename,
+                        index,
+                        shelfmark,
+                        document_id,
+                        preprocessed_regest_text,
+                        corpus_stats,
+                        process_text_original=original_regest_text,
+                    )
+                    # check if dict is empty --exception was raised while parsing segments for the given paragraph
+                    if paragraph_as_dict:
+                        process_paragraphs_dict_list.append(paragraph_as_dict)
+        return process_paragraphs_dict_list, corpus_stats
+
+
 def text_segmentation_alg(
     file_path: str, filename: str, document_id: str, corpus_stats: CorpusStats
 ) -> Tuple[List[dict], CorpusStats]:
     process_paragraphs_dict_list = []
+    process_paragraphs_dict_list, corpus_stats = HOCRFormat.parse_document(
+        file_path, filename, document_id, corpus_stats
+    )
+    if process_paragraphs_dict_list:
+        corpus_stats.inc_val_valid_docs()
+    # else:
+    #    print("file failed:", filename)
+    corpus_stats.inc_val_parsed_docs()
+    return process_paragraphs_dict_list, corpus_stats
+
+    # TODO check valid proceedigs, registration_no (corpus stats)
+
+    """
     try:
         # try column format
         process_paragraphs_dict_list, corpus_stats = ColumnFormat.parse_document(
@@ -324,3 +643,4 @@ def text_segmentation_alg(
     finally:
         corpus_stats.inc_val_parsed_docs()
         return process_paragraphs_dict_list, corpus_stats
+    """

@@ -356,6 +356,16 @@ class TestParseProcessSegments(unittest.TestCase):
         )
         self.assertEqual(expected_output, birthday_output)
 
+    def test_get_birthday_orc_dot_comma(self):
+        process_text = (
+            "Prozeß gegen den Schlosser Alois HAXPCINTNER (geb. 10. Jun, 1893)"
+        )
+        expected_output = ["1893-06-10"]
+        birthday_output = process_segment.get_birthday_of_people_involved_in_process(
+            process_text
+        )
+        self.assertEqual(expected_output, birthday_output)
+
     def test_ignore_nationality_occupation_prefix(self):
         process_text = (
             "Prozeß gegen den polnischen Hilfsarbeiter Jan BAYNO (geb. 8. Dez. 1917) aus "
@@ -402,7 +412,7 @@ class TestParseProcessSegments(unittest.TestCase):
             "Prozeß gegen den kfm. Angestellten Franz MAYER (geb. 24. Mrz. 1907) aus Münchenwegen Urkundenfälschung."
             "Urteil: 10 Monate Gefängnis(33 267,268 StGB)3. Jan. 1941 - 30. Jun. 1944(5 KLs So 57/41)"
         )
-        expected_verdict_paragraph = "5 KLs So 57/41"
+        expected_verdict_paragraph = "(5 KLs So 57/41)"
         try:
             verdict_paragraph_output = process_segment.get_registration_no(process_text)
             self.assertEqual(expected_verdict_paragraph, verdict_paragraph_output)
@@ -415,7 +425,7 @@ class TestParseProcessSegments(unittest.TestCase):
             "München wegen Anschlagens dreier handschriftlicher Zettel gegen den NS. Urteil: 8 Monate Gefängnis "
             "Anlage: Die inkriminierten Zettel 6. Jul. 1933 - 7. Mrz. 1935 | (S Pr 225/33) 38 "
         )
-        expected_verdict_paragraph = "S Pr 225/33"
+        expected_verdict_paragraph = "(S Pr 225/33)"
         try:
             verdict_paragraph_output = process_segment.get_registration_no(process_text)
             self.assertEqual(expected_verdict_paragraph, verdict_paragraph_output)
@@ -436,3 +446,150 @@ class TestParseProcessSegments(unittest.TestCase):
             process_segment.get_registration_no,
             process_text,
         )
+
+    def test_get_accusations(self):
+        process_text = (
+            "Prozeß gegen den Dienstknecht Johann WILLE (geb. 31. Mai 1909) und "
+            "die Metzgerswitwe Katharina BRAUN (geb. 10. Mai 1892), beide aus Neuburg a.d. Donau, "
+            "wegen Diebstahls. Urteils Wille 2 Jahre 6 Monate Zuchthaus, 5 Jahre Ehrverlust; "
+            "Braun Frei spruch (8 1 KWVO; 88 242, 243 STGB; ° 2 VVO) 20, Jul. 1944 28. Mrz. 1945 (3 SKLs 488/44)"
+        )
+        expected_output = [("WILLE", "Diebstahls"), ("BRAUN", "Diebstahls")]
+        accusation_output = process_segment.get_accusations(process_text)
+        self.assertEqual(expected_output, accusation_output)
+
+    def test_get_accusations_no_urteil(self):
+        process_text = (
+            "Ermittlungsverfahren gegen den Hausierer Andreas MANGERTSEDER (sed. 27, Nov. 1864 , gest. 13. Mai 1936) "
+            "aus Pfarrkirchen wegen einer kritischen Außerun über Hitler. "
+            "Verfahren wegen Todes des Angeklagten eingestellt 26, Mrz. 1936 24, Nov. 1936 (16 KMs So 169/36)"
+        )
+        expected_output = [("MANGERTSEDER", "einer kritischen Außerun über Hitler")]
+        accusation_output = process_segment.get_accusations(process_text)
+        self.assertEqual(expected_output, accusation_output)
+
+    def test_get_result_prozess(self):
+        process_text = (
+            "Prozeß gegen den Vertreter Martin GRAF (geb. 1. Mai 1895) aus Traunstein wesen Betrugs. "
+            "Urteil: 2 Jahre Gefängnis (88 263,267,268 StGB) 2, Jun, 1942 13. Apr. 1944 (4 KLs So 134/42)"
+        )
+        expected_output = [
+            (
+                "GRAF",
+                "Urteil: 2 Jahre Gefängnis",
+            )
+        ]
+        result_output = process_segment.get_result(process_text)
+        self.assertEqual(expected_output, result_output)
+
+    def test_get_result_prozess_no_law(self):
+        process_text = (
+            "Prozeß gegen den Former Johann Wilhelm KRAMER (zed. 9. Mai 1909) aus München wegen der Behauptung, "
+            'es seien schon mehr als "00 Kommunisten erschossen worden. Vorführung aus der Schutzhaft. '
+            "Urteil: 5 Monate Haft 3. Apr. 1933 19. Spt. 1934 (S Pr 8/33)"
+        )
+        expected_output = [
+            (
+                "KRAMER",
+                "Urteil: 5 Monate Haft",
+            )
+        ]
+        result_output = process_segment.get_result(process_text)
+        self.assertEqual(expected_output, result_output)
+
+    def test_get_result_prozess_anklage_zurückgenommen(self):
+        process_text = (
+            "Prozeß gegen die Geschäftsinhaberin Maria LANG (geb. 28. Spt. 1886) und den Kaufmann und Geschäftsinhaber "
+            "Josef HAUSNER (geb. 8. Spt. 1890), beide aus München, wegen Zurückhaltens von Textilwaren. “ “ (% 1 KWVO) "
+            "Anklage zurückgenommen 12. Mrz. 1942 3. Spt. 1944 (2 KLs So 205/42) a \\ 2 , e . * j ar un"
+        )
+        expected_output = [
+            (
+                "LANG",
+                "Anklage zurückgenommen",
+            ),
+            ("HAUSNER", "Anklage zurückgenommen"),
+        ]
+        result_output = process_segment.get_result(process_text)
+        self.assertEqual(expected_output, result_output)
+
+    def test_get_result_ermittlungsverfahren(self):
+        process_text = (
+            " Ermittlungsverfahren gegen den Möbelschreiner Paul SOLLANECK (geb, 4. Okt. 1896) "
+            "aus München, weil er abfällige Bemerkungen über die Usterreicher machte, "
+            "Verfahren eingestellt 7. Nov. 1938 5. Dez. 1938 (1d Js So 2172/38)"
+        )
+        expected_output = [("SOLLANECK", "Verfahren eingestellt")]
+        result_output = process_segment.get_result(process_text)
+        self.assertEqual(expected_output, result_output)
+
+    def test_get_result_filter_anlagen(self):
+        process_text = (
+            "Prozeß gegen die Hilfsarbeitersehefrau Maria SCHRAUFSTETTER (geb, 27. Aug. 1886) "
+            "aus München wegen unerlaubten Verteilens von kommunistischen Flugblättern., "
+            "Urteil: Freispruch nach Untersuchungshaft Anlage: 2 hektographierte Flugblätter "
+            'der "Rot Front" 21. Mrz. 1933 16, Mai 1933 (S Pr 2/33)'
+        )
+        expected_output = [
+            ("SCHRAUFSTETTER", "Urteil: Freispruch nach Untersuchungshaft")
+        ]
+        result_output = process_segment.get_result(process_text)
+        self.assertEqual(expected_output, result_output)
+
+    def test_get_duration(self):
+        process_text = (
+            " Ermittlungsverfahren gegen den Möbelschreiner Paul SOLLANECK (geb, 4. Okt. 1896) "
+            "aus München, weil er abfällige Bemerkungen über die Usterreicher machte, "
+            "Verfahren eingestellt 7. Nov. 1938 5. Dez. 1938 (1d Js So 2172/38)"
+        )
+        expected_output = "7. Nov. 1938 5. Dez. 1938"
+        duration = process_segment.get_duration(process_text)
+        self.assertEqual(expected_output, duration)
+
+    def test_get_duration_split(self):
+        process_text = (
+            " Ermittlungsverfahren gegen den Möbelschreiner Paul SOLLANECK (geb, 4. Okt. 1896) "
+            "aus München, weil er abfällige Bemerkungen über die Usterreicher machte, "
+            "Verfahren eingestellt 7. Nov. 1938 - 5. Dez. 1938 (1d Js So 2172/38)"
+        )
+        expected_output = "7. Nov. 1938 - 5. Dez. 1938"
+        duration = process_segment.get_duration(process_text)
+        self.assertEqual(expected_output, duration)
+
+    def test_get_duration_ocr_fail(self):
+        process_text = (
+            "Prozeß gegen die Hilfsarbeitersehefrau Maria SCHRAUFSTETTER (geb, 27. Aug. 1886) "
+            "aus München wegen unerlaubten Verteilens von kommunistischen Flugblättern., "
+            "Urteil: Freispruch nach Untersuchungshaft Anlage: 2 hektographierte Flugblätter der "
+            '"Rot Front" 21. Mrz. 1933 16, Mai 1933 (S Pr 2/33)'
+        )
+        expected_output = "21. Mrz. 1933 16, Mai 1933"
+        duration = process_segment.get_duration(process_text)
+        self.assertEqual(expected_output, duration)
+
+    def test_get_law(self):
+        process_text = (
+            "Prozeß gegen den Vertreter Martin GRAF (geb. 1. Mai 1895) aus Traunstein wesen Betrugs. "
+            "Urteil: 2 Jahre Gefängnis (88 263,267,268 StGB) 2, Jun, 1942 13. Apr. 1944 (4 KLs So 134/42)"
+        )
+        expected_output = [
+            (
+                "GRAF",
+                "(88 263,267,268 StGB)",
+            )
+        ]
+        law_output = process_segment.get_law(process_text)
+        self.assertEqual(expected_output, law_output)
+
+    def test_get_attachments(self):
+        process_text = (
+            "Prozeß gegen die Hilfsarbeitersehefrau Maria SCHRAUFSTETTER (geb, 27. Aug. 1886) "
+            "aus München wegen unerlaubten Verteilens von kommunistischen Flugblättern., "
+            "Urteil: Freispruch nach Untersuchungshaft Anlage: 2 hektographierte Flugblätter der "
+            '"Rot Front" 21. Mrz. 1933 16, Mai 1933 (S Pr 2/33)'
+        )
+        expected_output = [
+            ("SCHRAUFSTETTER", 'Anlage: 2 hektographierte Flugblätter der "Rot Front"')
+        ]
+        attachements = process_segment.get_attachments(process_text)
+        self.assertEqual(expected_output, attachements)

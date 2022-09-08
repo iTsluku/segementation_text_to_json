@@ -50,8 +50,8 @@ class CorpusStats:
             self.parsed_proceedings_repr = (
                 f"valid proceedigs: {self.valid_proceedings}/{self.parsed_proceedings} "
                 f"({round((self.valid_proceedings / self.parsed_proceedings) * 100, 2)}%), "
-                f"registration_no: {self.valid_registration_no}/{self.valid_proceedings} "
-                f"({round((self.valid_registration_no / self.valid_proceedings) * 100, 2)}%)"
+                f"registration_no: {self.valid_registration_no}/{self.parsed_proceedings} "
+                f"({round((self.valid_registration_no / self.parsed_proceedings) * 100, 2)}%)"
             )
 
     def get_repr_dict(self) -> dict:
