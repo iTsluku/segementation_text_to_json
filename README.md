@@ -211,8 +211,12 @@ Mögliche Input-Formate (Tesseract Output basierend auf Seitensegmentierungs-Mod
 ## Limitations
 
 Die Komplexität der Überführung in ein strukturiertes Format ergibt sich aus der Fehleranfälligkeit des OCR-Inputs 
-und der Variation, wie der Inhalt der Regesten strukturiert und annotiert ist. Die Qualität des Inputs ist maßgeblich 
-für den Output dieses Prozesses. Anbei folgt eine Liste mit bekannten/ offenen Problemen:
+und der Vielfalt, in welcher die Inhalte von Regesten strukturiert und bezüglich Personen annotiert sind. Die Qualität des Inputs ist maßgeblich 
+für den Output dieses Prozesses. Anbei folgt eine Liste mit bekannten Problemen im Bezug auf die Extraktion von personenbezogenen Daten:
 
 - Personen mit mehreren Berufen
-- ...
+- Personen ohne Beruf
+- Peronen mit <in RegEx nicht berücksichtigten> "Berufs-Prefix" (wie z.B. ldw., kath., kfm., ...)
+
+Die Optimierung der RegEx-Ausdrücke, sowie das Beheben bestehender false-positives (z.B. konkatenierte Regesten), bedarf einer Evaluation.
+Ob sich neue häufig auftretende Pattern finden lassen, für die es sich lohnen würde diesen Mehraufwand einzugehen, ist schwer zu beurteilen.
