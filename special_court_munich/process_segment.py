@@ -205,7 +205,9 @@ def parse_process_segment(
             "page": document_id,
             "document_name": document_name,
             "type": get_proceeding_type(p),
-            "processing_date": datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
+            "processing_date": datetime.now().isoformat(
+                timespec="seconds"  # rm milliseconds suffix
+            ),  # alternative: datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
             "error_tags": [],
         },
         "proceeding": {

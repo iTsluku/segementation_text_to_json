@@ -2,11 +2,11 @@
 
 ## Introduction
 
-Das Projekt Sondergerichtsakten zielt auf eine automatisierte Erfassung der Regesten ab 
+Das Projekt Sondergerichtsakten zielt auf eine automatisierte Erfassung der Regesten ab
 und ermöglich die Transformation eines semi-strukturierten Textbestandes zu einem strukturierten Format.
-Das Projekt basiert auf mehreren sequentiellen Prozessen. Im Prozess davor wurde der analog vorliegende 
+Das Projekt basiert auf mehreren sequentiellen Prozessen. Im Prozess davor wurde der analog vorliegende
 Dokumentenbestand gescannt und mittels Tesseract (Software für OCR-Verfahren) zu Text- bzw. HOCR-Dokumenten transformiert.
-Der Tesseract Output dient als Input für diesen Prozess. 
+Der Tesseract Output dient als Input für diesen Prozess.
 
 Mögliche Input-Formate (Tesseract Output basierend auf Seitensegmentierungs-Modus): Zeilenformat (--psm 6), Spaltenformat (--psm 4), HOCR.
 
@@ -14,15 +14,17 @@ Mögliche Input-Formate (Tesseract Output basierend auf Seitensegmentierungs-Mod
 ## Project structure
 
     .
+    ├── Categorization          # <TODO sebastian>
+    ├── Notebook                # <TODO sebastian>
     ├── input                   # Tesseract output (row-format, column-format, hocr)
     ├── output                  # JSON (output.json)
     ├── special_court_munich    # Parser and regex extraction implementation
     ├── tests                   # Unit tests
     ├── README.md               # Documentation
-    ├── eval_output.ipynb       # Evaluation
-    ├── main.py                 # Execution script
-    ├── requirements.txt        # Python module requirements
-    └── setup.py                # Setup script
+    ├── eval_output.ipynb       # JSON output evaluation
+    ├── main.py                 # Main script to execute parser/segmentation/extraction pipeline
+    └── requirements.txt        # Python module requirements
+
 
 ## Example
 
@@ -34,7 +36,7 @@ Mögliche Input-Formate (Tesseract Output basierend auf Seitensegmentierungs-Mod
        "page": "621",
        "document_name": "DHUP_NSJ_00665_Band_3_Sondergericht_München_Teil_3_1939_00621.hocr",
        "type": "Prozeß",
-       "processing_date": "09/08/2022, 15:26:38",
+       "processing_date": "2022-08-09T15:26:38",
        "error_tags": []
      },
      "proceeding": {
@@ -67,15 +69,15 @@ Mögliche Input-Formate (Tesseract Output basierend auf Seitensegmentierungs-Mod
    (3133) 9161 Prozeß gegen den Techniker Karl OELLER
    (geb. 22. Jul. 1882) aus München wegen
    Diebstahls.
-   
+
    Urteils Unterbringung in einer Heil- und
    Pflegeanstalt
    (8 3 HG, 88 42, 242 StGB)
-   
+
    15. Apr. 1942 Weglegung der Akten.
-   
+
    28, Spt. 1938 - 15. Apr. 1942
-   
+
    (1 KLs So 10/39)
    ```
 ### HOCR input
@@ -186,7 +188,7 @@ Mögliche Input-Formate (Tesseract Output basierend auf Seitensegmentierungs-Mod
    ```sh
    python main.py
    ```
-   
+
 ## Requirements (RegEx extraction)
 
 - [x] ID
@@ -207,11 +209,11 @@ Mögliche Input-Formate (Tesseract Output basierend auf Seitensegmentierungs-Mod
 - [x] law
 - [x] attachments
 - [ ] add_prosecution
-   
+
 ## Limitations
 
-Die Komplexität der Überführung in ein strukturiertes Format ergibt sich aus der Fehleranfälligkeit des OCR-Inputs 
-und der Vielfalt, in welcher die Inhalte von Regesten strukturiert und bezüglich Personen annotiert sind. Die Qualität des Inputs ist maßgeblich 
+Die Komplexität der Überführung in ein strukturiertes Format ergibt sich aus der Fehleranfälligkeit des OCR-Inputs
+und der Vielfalt, in welcher die Inhalte von Regesten strukturiert und bezüglich Personen annotiert sind. Die Qualität des Inputs ist maßgeblich
 für den Output dieses Prozesses. Anbei folgt eine Liste mit bekannten Problemen im Bezug auf die Extraktion von personenbezogenen Daten:
 
 - Personen mit mehreren Berufen
@@ -220,3 +222,19 @@ für den Output dieses Prozesses. Anbei folgt eine Liste mit bekannten Problemen
 
 Die Optimierung der RegEx-Ausdrücke, sowie das Beheben bestehender false-positives (z.B. konkatenierte Regesten), bedarf einer Evaluation.
 Ob sich neue häufig auftretende Pattern finden lassen, für die es sich lohnen würde diesen Mehraufwand einzugehen, ist schwer zu beurteilen.
+
+## Output
+
+The output file `output/output.json` contains all output records.
+The file has been split into one record per file using the following Ruby script:
+
+``` shell
+ruby \
+    -rjson \
+    -e 'i=1;JSON.load(File.read("output.json"))["proceedings"].each{|e| File.open("single/#{format("%04d",i)}_#{format("%04d",e["proceeding"]["ID"].to_i||0)}_#{format("%04d",e["proceeding"]["shelfmark"].to_i||0)}_#{File.basename(e["meta"]["document_name"],File.extname(e["meta"]["document_name"]))}.json","w"){|f|f.write(e)}; i+=1}'
+```
+
+The script above produces one JSON file per record in `output/single/<SEQ>_<ID>_<SHELFMARK>_<DOCNAME>.json`,
+where `SEQ` is a sequence form 1 to the number of records, `ID` is the identifier found inside the record under `proceeding.ID`, `SHELFMARK` is the shelfmark from the record found under `proceeding.shelfmark` and `DOCNAME` is the name of the document/page containing the record.
+
+Note that `ID` and `shelfmark` may be empty/missing/erroneous, because they come from the original input. Missing values have been replaced with `0000`. Both `SEQ`, `ID` and `SHELFMARK` are 4-digit 0-padded integers.
