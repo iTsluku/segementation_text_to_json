@@ -1,0 +1,163 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/iTsluku/segmentation_text_to_json/blob/master/output.schema.json",
+    "title": "Output",
+    "description": "Pipeline output.",
+    "type": "object",
+    "properties": {
+        "proceedings": {
+            "description": "The output of parser/segmentation/extraction pipeline corresponds to a list of regest entries.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "description": "A regest contains metadata as well as the defined text attributes of the corresponding entry.",
+                "properties": {
+                    "meta": {
+                        "type": "object",
+                        "description": "Metadata generated during automatic processing.",
+                        "properties": {
+                            "page": {
+                                "type": "string",
+                                "description": "Page ID is based on document names of the previous sequential process."
+                            },
+                            "document_name": {
+                                "type": "string",
+                                "description": "Document name depends on the previous sequential process, may vary depending on the hocr or text approach."
+                            },
+                            "type": {
+                                "type": ["string", "null"],
+                                "description": "Type of procedure, can correspond to a \"Process\" or a \"Ermittlungsverfahren\"."
+                            },
+                            "processing_date": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "DateTime at which this regest entry was automatically processed."
+                            },
+                            "error_tags": {
+                                "type": "array",
+                                "description": "List with error tags.",
+                                "items": {
+                                    "type": "string",
+                                    "description": "Defined error tag, which provides information about missing data."
+                                }
+                            }
+                        },
+                        "required": [
+                            "page",
+                            "document_name",
+                            "type",
+                            "processing_date",
+                            "error_tags"
+                        ]
+                    },
+                    "proceeding": {
+                        "type": "object",
+                        "description": "Extracted text segments of a regest.",
+                        "properties": {
+                            "ID": {
+                                "type": ["string", "null"],
+                                "description": "Sequential number in the edition."
+                            },
+                            "shelfmark": {
+                                "type": ["string", "null"],
+                                "description": "Signature."
+                            },
+                            "duration": {
+                                "type": ["string", "null"],
+                                "description": "Duration, often from to."
+                            },
+                            "registration_no": {
+                                "type": ["string", "null"],
+                                "description": "Registration number in brackets."
+                            },
+                            "text_original": {
+                                "type": "string",
+                                "description": "Parsed text without preprocessing."
+                            },
+                            "text_preprocessed": {
+                                "type": "string",
+                                "description": "Parsed text with preprocessing."
+                            },
+                            "people": {
+                                "type": "array",
+                                "description": "List of people involved in the proceeding.",
+                                "items": {
+                                    "type": "object",
+                                    "description": "Description of a person involved in the proceeding.",
+                                    "properties": {
+                                        "first_name": {
+                                            "type": ["string", "null"],
+                                            "description": "Multiple first names per person are possible."
+                                        },
+                                        "last_name": {
+                                            "type": ["string", "null"],
+                                            "description": "Last name of a person."
+                                        },
+                                        "occupation": {
+                                            "type": ["string", "null"],
+                                            "description": "occupation title, may be more than one or not present."
+                                        },
+                                        "date_of_birth": {
+                                            "type": ["string", "null"],
+                                            "description": "Birthday of a person."
+                                        },
+                                        "accusation": {
+                                            "type": ["string", "null"],
+                                            "description": "Accusation with \"wegen\" introduced to the end of the paragraph or to the next person; applies to all previously mentioned persons."
+                                        },
+                                        "law": {
+                                            "type": ["string", "null"],
+                                            "description": "Law attribute."
+                                        },
+                                        "result": {
+                                            "type": ["string", "null"],
+                                            "description": "Verdict: ... or proceedings discontinued."
+                                        },
+                                        "residence": {
+                                            "type": ["string", "null"],
+                                            "description": "Residence; introduced with \"aus\"; in individual cases not available"
+                                        },
+                                        "attachements": {
+                                            "type": ["string", "null"],
+                                            "description": "Attachments; optional for processes."
+                                        },
+                                        "add_prosecution": {
+                                            "type": ["string", "null"],
+                                            "description": "Additional reference to further prosecution or detention."
+                                        }
+                                    },
+                                    "required": [
+                                        "first_name",
+                                        "last_name",
+                                        "occupation",
+                                        "date_of_birth",
+                                        "accusation",
+                                        "law",
+                                        "result",
+                                        "residence",
+                                        "attachements",
+                                        "add_prosecution"
+                                    ]
+                                }
+                            }
+                        },
+                        "required": [
+                            "ID",
+                            "shelfmark",
+                            "duration",
+                            "registration_no",
+                            "text_original",
+                            "text_preprocessed",
+                            "people"
+                        ]
+                    }
+                },
+                "required": [
+                    "meta",
+                    "proceeding"
+                ]
+            }
+        }
+    },
+    "required": ["proceedings"]
+}
