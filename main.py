@@ -13,7 +13,7 @@ pattern_filename_id = re.compile(r"^.*\d+_(\d{5}).(?:txt|hocr)$")
 
 def main(debug=False) -> None:
     cwd = os.getcwd()
-    output_path_abs = os.path.join(cwd, "output/output.json")
+    output_path_abs = os.path.join(cwd, "output/2023_02_output.json")
     corpus_stats = CorpusStats()
     data = {"proceedings": []}
     if debug:
@@ -34,12 +34,14 @@ def main(debug=False) -> None:
         ids_and_filenames.append((int(document_id), filename))
     ids_and_filenames.sort(key=lambda x: x[0])
 
+    forward_pass = []
     for i, (document_id, filename) in enumerate(ids_and_filenames):
-        proceedings, corpus_stats = text_segmentation_alg(
+        proceedings, corpus_stats, forward_pass = text_segmentation_alg(
             os.path.join(text_new_dir_path, filename),
             filename,
             str(document_id),
             corpus_stats,
+            forward_pass,
         )
         for p in proceedings:
             data["proceedings"].append(p)

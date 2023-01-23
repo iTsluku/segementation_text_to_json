@@ -1,6 +1,7 @@
 import string
 import bs4
-from typing import List, Tuple, Optional
+import numpy as np
+from typing import List, Tuple, Optional, Union
 from nltk.tokenize import word_tokenize
 
 from special_court_munich import preprocess_segment, process_segment
@@ -304,7 +305,22 @@ class RowFormat:
 
 class HOCRFormat:
     @staticmethod
-    def is_paragraph_new_regest(paragraph: bs4.element.Tag) -> bool:
+    def get_regest_text_x1_estimate(paragraphs):
+        x1s = []
+        for paragraph in paragraphs:
+            lines = paragraph.find_all("span", class_="ocr_line")
+            for line in lines:
+                words = line.find_all("span", class_="ocrx_word")
+                if not words:
+                    continue
+                x1 = int(words[0]["title"].split()[1])
+                x1s.append(x1)
+        return np.median(x1s)  # median :: ignore outliers, assume enough lines
+
+    @staticmethod
+    def is_paragraph_new_regest(
+        paragraph: bs4.element.Tag, regest_text_x1_estimate, document_id
+    ) -> bool:
         lines = paragraph.find_all("span", class_="ocr_line")
         if not lines:
             return False
@@ -314,8 +330,11 @@ class HOCRFormat:
             return False
         # check index x1 < 1400
         check = words[0].text
+        if check.startswith(document_id):
+            return False
+        offset = abs(int(words[0]["title"].split()[1]) - regest_text_x1_estimate)
         if (
-            int(words[0]["title"].split()[1]) < 1400  # x1 threshold
+            800 < offset < 1200
             and check not in string.punctuation  # no punctuation
             and any(i.isdigit() for i in check)  # min one digit
         ):
@@ -323,16 +342,20 @@ class HOCRFormat:
         return False
 
     @staticmethod
-    def is_line_new_regest(line: bs4.element.Tag) -> bool:
+    def is_line_new_regest(
+        line: bs4.element.Tag, regest_text_x1_estimate, document_id
+    ) -> bool:
         words = line.find_all("span", class_="ocrx_word")
         if not words:
             return False
-        # check index x1 < 1400
         check = words[0].text
+        if check.startswith(document_id):
+            return False
+        offset = abs(int(words[0]["title"].split()[1]) - regest_text_x1_estimate)
         if (
-            int(words[0]["title"].split()[1]) < 1400  # x1 threshold
-            and check not in string.punctuation  # no punctuation
-            and any(i.isdigit() for i in check)  # min one digit
+            800 < offset < 1200
+            and check not in string.punctuation  # no punctuation --TODO rm?
+            and any(i.isdigit() for i in check)  # min one digit --TODO rm?
         ):
             return True
         return False
@@ -384,13 +407,18 @@ class HOCRFormat:
         return None
 
     @staticmethod
-    def get_shelfmark_by_line(line: bs4.element.Tag) -> Optional[str]:
+    def get_shelfmark_by_line(
+        line: bs4.element.Tag, second_line: Union[bs4.element.Tag, None]
+    ) -> Optional[str]:
         words = line.find_all("span", class_="ocrx_word")
 
         if not words or len(words) < 2:
             return None
-        check = words[1].text
-
+        check = words[1].text.strip()
+        if check == "in:":
+            if second_line:
+                words_snd = second_line.find_all("span", class_="ocrx_word")
+                check = words_snd[0].text.strip()
         if check.isdigit():
             return check
         return None
@@ -462,185 +490,107 @@ class HOCRFormat:
         return " ".join(original_regest_text[2:])
 
     @staticmethod
+    def remove_page_number_forward_pass(
+        lines: List[bs4.element.Tag],
+    ) -> List[bs4.element.Tag]:
+        if not lines:
+            return lines
+        words_last_line = lines[-1].find_all("span", class_="ocrx_word")
+        if not words_last_line or len(words_last_line) > 1:
+            return lines
+        if words_last_line[0].getText().strip().isdigit():
+            # if line equals page number line, then remove
+            return lines[:-1]
+        return lines
+
+    @staticmethod
     def parse_document(
-        file_path: str, filename: str, document_id: str, corpus_stats: CorpusStats
+        file_path: str,
+        filename: str,
+        document_id: str,
+        corpus_stats: CorpusStats,
+        forward_pass: [bs4.element.Tag],
     ):
         process_paragraphs_dict_list = []
-        temp_paragraphs = []
-        temp_lines = []
+        temp_lines = HOCRFormat.remove_page_number_forward_pass(forward_pass)
 
         with open(file_path, "r") as file:
             soup = bs4.BeautifulSoup(file, "html.parser")
             _check = soup.find_all("div", class_="ocr_carea")
             if not _check:
                 # TODO check
-                return process_paragraphs_dict_list, corpus_stats
+                return process_paragraphs_dict_list, corpus_stats, temp_lines
 
             x_min, y_min, x_max, y_max = _check[0]["title"].split()[1:]
             paragraphs = soup.find_all("p")
 
             if not paragraphs:
                 # TODO check
-                return process_paragraphs_dict_list, corpus_stats
-
-            if len(paragraphs) == 1:
-                # bad ocr quality, only one paragraph -> process lines not paragraphs
-                lines = paragraphs[0].find_all("span", class_="ocr_line")
-                for line in lines:
-                    if HOCRFormat.is_line_new_regest(line):
-                        if temp_lines:
-                            # process temp lines
-                            index = HOCRFormat.get_index_by_line(temp_lines[0])
-                            shelfmark = HOCRFormat.get_shelfmark_by_line(temp_lines[0])
-                            original_regest_text = (
-                                HOCRFormat.get_original_regest_text_by_lines(temp_lines)
-                            )
-                            preprocessed_regest_text = (
-                                HOCRFormat.get_preprocessed_regest_text_by_lines(
-                                    temp_lines
-                                )
-                            )
-                            (
-                                paragraph_as_dict,
-                                corpus_stats,
-                            ) = process_segment.parse_process_segment(
-                                filename,
-                                index,
-                                shelfmark,
-                                document_id,
-                                preprocessed_regest_text,
-                                corpus_stats,
-                                process_text_original=original_regest_text,
-                            )
-                            # check if dict is empty --exception was raised while parsing segments for the given paragraph
-                            if paragraph_as_dict:
-                                process_paragraphs_dict_list.append(paragraph_as_dict)
-                        temp_lines = [line]
-                    else:
-                        if temp_lines:
-                            temp_lines.append(line)
-                if temp_lines:
-                    # process remaining temp lines
-                    index = HOCRFormat.get_index_by_line(temp_lines[0])
-                    shelfmark = HOCRFormat.get_shelfmark_by_line(temp_lines[0])
-                    original_regest_text = HOCRFormat.get_original_regest_text_by_lines(
-                        temp_lines
-                    )
-                    preprocessed_regest_text = (
-                        HOCRFormat.get_preprocessed_regest_text_by_lines(temp_lines)
-                    )
-                    (
-                        paragraph_as_dict,
-                        corpus_stats,
-                    ) = process_segment.parse_process_segment(
-                        filename,
-                        index,
-                        shelfmark,
-                        document_id,
-                        preprocessed_regest_text,
-                        corpus_stats,
-                        process_text_original=original_regest_text,
-                    )
-                    # check if dict is empty --exception was raised while parsing segments for the given paragraph
-                    if paragraph_as_dict:
-                        process_paragraphs_dict_list.append(paragraph_as_dict)
-
-            else:
-                # better ocr quality, multiple paragraphs -> process paragraphs
-                for paragraph in paragraphs:
-                    if HOCRFormat.is_paragraph_new_regest(paragraph):
-                        if temp_paragraphs:
-                            # process temp paragraphs
-                            index = HOCRFormat.get_index(temp_paragraphs[0])
-                            shelfmark = HOCRFormat.get_shelfmark(temp_paragraphs[0])
-                            original_regest_text = HOCRFormat.get_original_regest_text(
-                                temp_paragraphs
-                            )
-                            preprocessed_regest_text = (
-                                HOCRFormat.get_preprocessed_regest_text(temp_paragraphs)
-                            )
-                            (
-                                paragraph_as_dict,
-                                corpus_stats,
-                            ) = process_segment.parse_process_segment(
-                                filename,
-                                index,
-                                shelfmark,
-                                document_id,
-                                preprocessed_regest_text,
-                                corpus_stats,
-                                process_text_original=original_regest_text,
-                            )
-                            # check if dict is empty --exception was raised while parsing segments for the given paragraph
-                            if paragraph_as_dict:
-                                process_paragraphs_dict_list.append(paragraph_as_dict)
-                        temp_paragraphs = [paragraph]
-                    else:
-                        if temp_paragraphs:
-                            temp_paragraphs.append(paragraph)
-
-                if temp_paragraphs:
-                    # process remaining temp paragraphs
-                    index = HOCRFormat.get_index(temp_paragraphs[0])
-                    shelfmark = HOCRFormat.get_shelfmark(temp_paragraphs[0])
-                    original_regest_text = HOCRFormat.get_original_regest_text(
-                        temp_paragraphs
-                    )
-                    preprocessed_regest_text = HOCRFormat.get_preprocessed_regest_text(
-                        temp_paragraphs
-                    )
-                    (
-                        paragraph_as_dict,
-                        corpus_stats,
-                    ) = process_segment.parse_process_segment(
-                        filename,
-                        index,
-                        shelfmark,
-                        document_id,
-                        preprocessed_regest_text,
-                        corpus_stats,
-                        process_text_original=original_regest_text,
-                    )
-                    # check if dict is empty --exception was raised while parsing segments for the given paragraph
-                    if paragraph_as_dict:
-                        process_paragraphs_dict_list.append(paragraph_as_dict)
-        return process_paragraphs_dict_list, corpus_stats
+                return process_paragraphs_dict_list, corpus_stats, temp_lines
+            regest_text_x1_estimate = HOCRFormat.get_regest_text_x1_estimate(paragraphs)
+            lines = []
+            for paragraph in paragraphs:
+                lines_ = paragraph.find_all("span", class_="ocr_line")
+                lines += lines_
+            for line in lines:
+                if HOCRFormat.is_line_new_regest(
+                    line, regest_text_x1_estimate, document_id
+                ):
+                    if temp_lines:
+                        # process temp lines
+                        index = HOCRFormat.get_index_by_line(temp_lines[0])
+                        second_line = None
+                        if len(temp_lines) >= 2:
+                            second_line = temp_lines[1]
+                        shelfmark = HOCRFormat.get_shelfmark_by_line(
+                            temp_lines[0], second_line
+                        )
+                        original_regest_text = (
+                            HOCRFormat.get_original_regest_text_by_lines(temp_lines)
+                        )
+                        preprocessed_regest_text = (
+                            HOCRFormat.get_preprocessed_regest_text_by_lines(temp_lines)
+                        )
+                        (
+                            paragraph_as_dict,
+                            corpus_stats,
+                        ) = process_segment.parse_process_segment(
+                            filename,
+                            index,
+                            shelfmark,
+                            document_id,
+                            preprocessed_regest_text,
+                            corpus_stats,
+                            process_text_original=original_regest_text,
+                        )
+                        # check if dict is empty --exception was raised while parsing segments for the given paragraph
+                        if paragraph_as_dict:
+                            process_paragraphs_dict_list.append(paragraph_as_dict)
+                    temp_lines = [line]
+                else:
+                    if temp_lines:
+                        temp_lines.append(line)
+        return process_paragraphs_dict_list, corpus_stats, temp_lines
 
 
 def text_segmentation_alg(
-    file_path: str, filename: str, document_id: str, corpus_stats: CorpusStats
-) -> Tuple[List[dict], CorpusStats]:
+    file_path: str,
+    filename: str,
+    document_id: str,
+    corpus_stats: CorpusStats,
+    forward_pass: [bs4.element.Tag],
+) -> Tuple[List[dict], CorpusStats, List[bs4.element.Tag]]:
     process_paragraphs_dict_list = []
-    process_paragraphs_dict_list, corpus_stats = HOCRFormat.parse_document(
-        file_path, filename, document_id, corpus_stats
+    (
+        process_paragraphs_dict_list,
+        corpus_stats,
+        forward_pass,
+    ) = HOCRFormat.parse_document(
+        file_path, filename, document_id, corpus_stats, forward_pass
     )
     if process_paragraphs_dict_list:
         corpus_stats.inc_val_valid_docs()
     # else:
     #    print("file failed:", filename)
     corpus_stats.inc_val_parsed_docs()
-    return process_paragraphs_dict_list, corpus_stats
-
-    # TODO check valid proceedigs, registration_no (corpus stats)
-
-    """
-    try:
-        # try column format
-        process_paragraphs_dict_list, corpus_stats = ColumnFormat.parse_document(
-            file_path, filename, document_id, corpus_stats
-        )
-        corpus_stats.inc_val_valid_docs()
-    except (InvalidIdParagraph, ParagraphSegmentationException):
-        # colum format failed -> try row format
-        try:
-            process_paragraphs_dict_list, corpus_stats = RowFormat.parse_document(
-                file_path, filename, document_id, corpus_stats
-            )
-            corpus_stats.inc_val_valid_docs()
-        except RowFormatException:
-            # print("failed:", file_path)
-            pass
-    finally:
-        corpus_stats.inc_val_parsed_docs()
-        return process_paragraphs_dict_list, corpus_stats
-    """
+    return process_paragraphs_dict_list, corpus_stats, forward_pass
